@@ -74,3 +74,112 @@ public struct GripCalibration: Codable, Equatable, Sendable {
     public func isCalibrated(for location: SensorLocation) -> Bool { forward(for: location) != nil }
 }
 
+/// Learns `forward` from one gesture: hold still, then tilt the earbud up.
+///
+/// A tilt up is a rotation about the user's left-right axis, so the axis of that rotation,
+/// levelled against gravity, is "right"; forward follows as up × right.
+public struct AxisCalibrator: Sendable {
+    public enum Problem: Sendable, Equatable {
+        /// The motion was mostly a sideways turn rather than a tilt.
+        case sideways
+        /// The tilt was too small to read an axis from.
+        case tooSmall
+    }
+
+    public enum State: Sendable, Equatable {
+        /// Waiting for the hand to settle.
+        case settling
+        /// Still. Waiting for the tilt.
+        case ready
+        /// Reading the tilt. Progress runs 0…1.
+        case capturing(progress: Double)
+        case done(forward: Vec3)
+    }
+
+    public private(set) var state: State = .settling
+    /// Set when the last attempt was rejected; cleared when the next one starts.
+    public private(set) var problem: Problem?
+
+    // Tunables, in degrees and seconds.
+    var stillRate = 10.0
+    var stillTime = 0.35
+    var onsetRate = 20.0
+    var endRate = 8.0
+    var minAngle = 6.0
+    var fullAngle = 14.0
+    var maxDuration = 1.2
+
+    private var stillFor = 0.0
+    private var theta = Vec3.zero
+    private var upSum = Vec3.zero
+    private var elapsed = 0.0
+    private var lastTimestamp: Double?
+
+    public init() {}
+
+    public mutating func restart() {
+        state = .settling
+        problem = nil
+        stillFor = 0
+        lastTimestamp = nil
+    }
+
+    public mutating func ingest(_ s: MotionSample) {
+        if case .done = state { return }
+        let dt = lastTimestamp.map { clamp(s.timestamp - $0, 0, 0.05) } ?? 0.02
+        lastTimestamp = s.timestamp
+
+        guard let up = (-s.gravity).unit else { return }
+        let w = s.rotationRate
+        let speed = w.length.degrees
+        let vertical = w.dot(up)
+        let horizontal = (w - up * vertical).length.degrees
+
+        switch state {
+        case .settling:
+            stillFor = speed < stillRate ? stillFor + dt : 0
+            if stillFor >= stillTime { state = .ready }
+
+        case .ready:
+            if horizontal > onsetRate, horizontal > 1.5 * abs(vertical).degrees {
+                theta = w * dt
+                upSum = up
+                elapsed = dt
+                problem = nil
+                state = .capturing(progress: 0)
+            }
+
+        case .capturing:
+            theta += w * dt
+            upSum += up
+            elapsed += dt
+            let upAvg = upSum.unit ?? up
+            let level = theta - upAvg * theta.dot(upAvg)
+            let angle = level.length.degrees
+            let finished = (elapsed > 0.1 && speed < endRate) || elapsed > maxDuration || angle > 28
+            if !finished {
+                state = .capturing(progress: clamp(angle / fullAngle, 0, 1))
+                return
+            }
+            let turned = abs(theta.dot(upAvg)).degrees
+            if angle < minAngle {
+                fail(.tooSmall)
+            } else if turned > 0.7 * angle {
+                fail(.sideways)
+            } else if let right = level.unit {
+                state = .done(forward: upAvg.cross(right))
+            } else {
+                fail(.tooSmall)
+            }
+
+        case .done:
+            break
+        }
+    }
+
+    private mutating func fail(_ p: Problem) {
+        problem = p
+        stillFor = 0
+        state = .settling
+    }
+}
