@@ -79,3 +79,95 @@ public struct Telemetry: Sendable, Equatable {
     public init() {}
 }
 
+/// The whole pipeline: motion samples in, cursor movement and clicks out.
+///
+/// Feed every sample to `ingest`, and call `frame` once per display refresh for the movement
+/// to apply. The engine is a value with no clock or threads of its own, so a recorded trace
+/// replays to the same result every time.
+public struct PointerEngine: Sendable {
+    public struct Output: Sendable, Equatable {
+        public var events: [PointerEvent] = []
+        /// Movement to apply at once, before acting on `events`. Non-zero when a tap pulls the
+        /// cursor back to where it was aimed before the jolt.
+        public var snap = Vec2.zero
+    }
+
+    public struct Frame: Sendable, Equatable {
+        public var move = Vec2.zero
+        public var scroll = Vec2.zero
+    }
+
+    public var settings: EngineSettings {
+        didSet {
+            // Turning taps off, or changing what they mean, mid-gesture must not leave a
+            // click waiting or a drag held.
+            if settings.tapsEnabled != oldValue.tapsEnabled || settings.scheme != oldValue.scheme || settings.thirdTap != oldValue.thirdTap {
+                queued += sequencer.reset()
+            }
+            applySettings()
+        }
+    }
+    public var calibration: GripCalibration {
+        // Pick the new axes up on the next sample.
+        didSet { mapperLocation = nil }
+    }
+    public private(set) var telemetry = Telemetry()
+    /// Non-nil while a calibration gesture is being read. Pointer output is paused meanwhile.
+    public private(set) var calibrator: AxisCalibrator?
+
+    /// How far before a tap the cursor is rewound, seconds. Covers the hand tensing up.
+    var preTap = 0.06
+    /// How long after a tap the cursor stays put, seconds. Covers the rebound.
+    var postTap = 0.16
+    /// How long leftover tap displacement is remembered, seconds.
+    var debtMemory = 0.6
+    /// Samples dropped after the stream (re)starts, while sensor fusion settles.
+    var warmupSamples = 12
+
+    private var mapper = AxisMapper()
+    private var mapperLocation: SensorLocation?
+    private var shaper = RateShaper()
+    private var playout = Playout()
+    private var scrollPlayout = Playout()
+    private var detector = TapDetector()
+    private var sequencer = TapSequencer()
+
+    private var lastTimestamp: Double?
+    private var warmup = 0
+    private var holdUntil = -Double.infinity
+    private var scrollUntil = -Double.infinity
+    private var rollSmoothed = 0.0
+    /// Degrees of yaw and pitch the hand moved while the cursor was held for a tap. A tap
+    /// knocks the case off its aim and the hand drifts back over the next half second; that
+    /// return is not pointing, so it is paid off against this instead of moving the cursor.
+    private var debt = Vec2.zero
+    private var recentMotion: [(time: Double, d: Vec2)] = []
+    /// How far the hand has moved since the gesture in progress began, degrees.
+    private var wander = Vec2.zero
+    /// Turning speed of the last three quarters of a second, deg/s.
+    private var speeds: [(time: Double, speed: Double)] = []
+    /// Events owed from outside a sample, handed over with the next one.
+    private var queued: [PointerEvent] = []
+
+    /// `forward` used before the grip has been calibrated. Measured with both AirPods docked
+    /// and the case held like a remote, lid open; the left earbud sits mirrored in the case.
+    public static func defaultForward(for location: SensorLocation) -> Vec3 {
+        location == .left ? Vec3(0.893, 0.394, 0.217) : Vec3(-0.893, 0.394, 0.217)
+    }
+
+    public init(settings: EngineSettings = EngineSettings(), calibration: GripCalibration = GripCalibration()) {
+        self.settings = settings
+        self.calibration = calibration
+        applySettings()
+    }
+
+    private mutating func applySettings() {
+        shaper.params = settings.shaper
+        detector.params = settings.tap
+        detector.params.partnerWindow = settings.tapWindow
+        sequencer.scheme = settings.scheme
+        sequencer.window = settings.tapWindow
+        sequencer.thirdTap = settings.thirdTap
+    }
+
+}
