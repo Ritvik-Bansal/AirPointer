@@ -181,4 +181,40 @@ public struct PointerEngine: Sendable {
         calibrator = nil
     }
 
+    // MARK: Lifecycle
+
+    /// Forgets all motion state. Releases a held drag.
+    public mutating func reset() -> [PointerEvent] {
+        lastTimestamp = nil
+        warmup = 0
+        haltMotion()
+        detector.reset()
+        speeds.removeAll()
+        mapperLocation = nil
+        let owed = queued + sequencer.reset()
+        queued.removeAll()
+        return owed
+    }
+
+    /// Calls off any gesture in progress and releases a held drag, leaving motion alone.
+    /// Used when the pointer is switched back on, so taps made while it was off count for nothing.
+    public mutating func cancelGestures() -> [PointerEvent] {
+        holdUntil = -.infinity
+        debt = .zero
+        wander = .zero
+        return sequencer.reset()
+    }
+
+    private mutating func haltMotion() {
+        shaper.reset()
+        playout.halt()
+        scrollPlayout.halt()
+        holdUntil = -.infinity
+        scrollUntil = -.infinity
+        rollSmoothed = 0
+        debt = .zero
+        wander = .zero
+        recentMotion.removeAll()
+    }
+
 }
