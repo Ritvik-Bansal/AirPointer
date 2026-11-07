@@ -217,4 +217,34 @@ public struct PointerEngine: Sendable {
         recentMotion.removeAll()
     }
 
+    // MARK: Telling a tap from a knock
+
+    /// Fastest turning speed in the quarter second before `time`, leaving out the last
+    /// sample, where the jolt itself may already have begun. Nil when the stream is too new.
+    private func leadInPeak(before time: Double) -> Double? {
+        let lead = speeds.filter { $0.time >= time - 0.26 && $0.time <= time - 0.03 }
+        guard lead.count >= 6 else { return nil }
+        return lead.map(\.speed).max()
+    }
+
+    /// Average turning speed over the `span` seconds up to `time`. Nil when there is too little to go on.
+    private func meanSpeed(until time: Double, over span: Double) -> Double? {
+        let recent = speeds.filter { $0.time >= time - span && $0.time <= time }
+        guard recent.count >= Int(span / 0.02 * 0.5) else { return nil }
+        return recent.map(\.speed).reduce(0, +) / Double(recent.count)
+    }
+
+    /// The hand had stopped before `time`: no burst of motion in the last quarter second, and
+    /// settled on average over the last half. With no history, the answer is no.
+    private func isCalm(before time: Double) -> Bool {
+        (leadInPeak(before: time) ?? .infinity) <= settings.leadInSpeed
+            && (meanSpeed(until: time - 0.03, over: 0.5) ?? .infinity) <= settings.settledSpeed
+    }
+
+    /// The case is in a hand rather than lying on something: a hand never holds anything
+    /// perfectly still.
+    private func isHandHeld(until time: Double, over span: Double) -> Bool {
+        (meanSpeed(until: time, over: span) ?? 0) >= settings.restSpeed
+    }
+
 }
