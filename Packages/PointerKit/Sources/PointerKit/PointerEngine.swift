@@ -170,4 +170,15 @@ public struct PointerEngine: Sendable {
         sequencer.thirdTap = settings.thirdTap
     }
 
+    // MARK: Calibration
+
+    public mutating func beginCalibration() {
+        calibrator = AxisCalibrator()
+        haltMotion()
+    }
+
+    public mutating func cancelCalibration() {
+        calibrator = nil
+    }
+
 }
