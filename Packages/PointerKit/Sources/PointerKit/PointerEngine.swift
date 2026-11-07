@@ -37,3 +37,45 @@ public struct EngineSettings: Sendable, Equatable {
     public init() {}
 }
 
+/// A snapshot of what the engine is seeing, for the interface.
+public struct Telemetry: Sendable, Equatable {
+    /// deg/s.
+    public var yaw = 0.0
+    public var pitch = 0.0
+    public var roll = 0.0
+    /// Cursor velocity the engine is asking for, points per second.
+    public var velocity = Vec2.zero
+    /// Latest tap score relative to its threshold.
+    public var tapLevel = 0.0
+    /// True while the cursor is held in place around a tap.
+    public var holding = false
+    /// Jolts that looked like taps but were refused: the hand was moving, the case was
+    /// lying down, or the hand wandered off mid-gesture.
+    public var knocksIgnored = 0
+    /// The most recent jolt the detector found, and what was made of it. For diagnosis.
+    public var lastJolt = Jolt()
+
+    public struct Jolt: Sendable, Equatable {
+        /// Sensor time of the jolt; zero before the first one.
+        public var time = 0.0
+        /// Fastest the hand was turning in the quarter second before it, deg/s.
+        public var leadIn = 0.0
+        /// Average turning speed over the half second before it, deg/s.
+        public var stillness = 0.0
+        /// Whether it continued a gesture already under way.
+        public var continued = false
+        public var accepted = false
+
+        public init() {}
+    }
+    public var scrolling = false
+    /// How far the case is aimed above level, degrees. Read straight from gravity, so it does not drift.
+    public var elevation = 0.0
+    public var gravity = Vec3(0, 0, -1)
+    public var attitude = simd_quatd(ix: 0, iy: 0, iz: 0, r: 1)
+    public var location = SensorLocation.unknown
+    public var timestamp = 0.0
+
+    public init() {}
+}
+
