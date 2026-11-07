@@ -50,3 +50,27 @@ public struct AxisMapper: Sendable {
     }
 }
 
+/// The per-earbud `forward` directions learned by calibration.
+public struct GripCalibration: Codable, Equatable, Sendable {
+    public var forwardLeft: [Double]?
+    public var forwardRight: [Double]?
+
+    public init(forwardLeft: [Double]? = nil, forwardRight: [Double]? = nil) {
+        self.forwardLeft = forwardLeft
+        self.forwardRight = forwardRight
+    }
+
+    public func forward(for location: SensorLocation) -> Vec3? {
+        let v = location == .left ? forwardLeft : forwardRight
+        guard let v, v.count == 3 else { return nil }
+        return Vec3(v[0], v[1], v[2])
+    }
+
+    public mutating func set(_ forward: Vec3, for location: SensorLocation) {
+        let v = [forward.x, forward.y, forward.z]
+        if location == .left { forwardLeft = v } else { forwardRight = v }
+    }
+
+    public func isCalibrated(for location: SensorLocation) -> Bool { forward(for: location) != nil }
+}
+
