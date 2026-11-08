@@ -83,3 +83,74 @@ struct TapDetectorTests {
     }
 }
 
+@Suite("Tap gestures")
+struct TapSequencerTests {
+    @Test("Two taps click at once, on the second tap")
+    func doubleTapClicks() {
+        var seq = TapSequencer()
+        #expect(seq.tap(at: 1.00).isEmpty)
+        #expect(seq.isPending)
+        #expect(seq.tap(at: 1.27) == [.click(.left, count: 1)])
+        #expect(!seq.isPending)
+        #expect(seq.advance(to: 2.0).isEmpty)
+    }
+
+    @Test("A lone tap becomes a right-click once the window has passed")
+    func loneTap() {
+        var seq = TapSequencer(window: 0.4)
+        _ = seq.tap(at: 1.00)
+        #expect(seq.advance(to: 1.39).isEmpty)
+        #expect(seq.advance(to: 1.41) == [.click(.right, count: 1)])
+        #expect(seq.advance(to: 1.60).isEmpty)
+    }
+
+    @Test("A third quick tap makes it a double-click, a fourth a triple")
+    func extraTaps() {
+        var seq = TapSequencer()
+        _ = seq.tap(at: 1.00)
+        _ = seq.tap(at: 1.25)
+        #expect(seq.tap(at: 1.50) == [.click(.left, count: 2)])
+        #expect(seq.tap(at: 1.75) == [.click(.left, count: 3)])
+    }
+
+    @Test("Two separate double-taps are two separate clicks")
+    func separateClicks() {
+        var seq = TapSequencer()
+        _ = seq.tap(at: 1.00)
+        #expect(seq.tap(at: 1.25) == [.click(.left, count: 1)])
+        #expect(seq.advance(to: 2.0).isEmpty)
+        #expect(seq.tap(at: 2.20).isEmpty)
+        #expect(seq.tap(at: 2.45) == [.click(.left, count: 1)])
+    }
+
+    @Test("Drag lock: a third tap presses and holds, the next tap lets go")
+    func dragLock() {
+        var seq = TapSequencer(thirdTap: .dragLock)
+        _ = seq.tap(at: 1.00)
+        _ = seq.tap(at: 1.25)
+        #expect(seq.tap(at: 1.50) == [.buttonDown(.left)])
+        #expect(seq.isDragging)
+        #expect(seq.advance(to: 5.0).isEmpty)
+        #expect(seq.tap(at: 5.20) == [.buttonUp(.left)])
+        #expect(!seq.isDragging)
+    }
+
+    @Test("Resetting never leaves the button held down")
+    func resetReleases() {
+        var seq = TapSequencer(thirdTap: .dragLock)
+        _ = seq.tap(at: 1.00)
+        _ = seq.tap(at: 1.25)
+        _ = seq.tap(at: 1.50)
+        #expect(seq.reset() == [.buttonUp(.left)])
+        #expect(seq.reset().isEmpty)
+    }
+
+    @Test("Single-tap scheme: every tap clicks, quick taps count up")
+    func singleTapScheme() {
+        var seq = TapSequencer(scheme: .singleTapClicks)
+        #expect(seq.tap(at: 1.00) == [.click(.left, count: 1)])
+        #expect(seq.tap(at: 1.25) == [.click(.left, count: 2)])
+        #expect(seq.advance(to: 3).isEmpty)
+        #expect(seq.tap(at: 3.10) == [.click(.left, count: 1)])
+    }
+}
