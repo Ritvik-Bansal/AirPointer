@@ -40,3 +40,35 @@ enum RuntimeEvent: Sendable {
     case calibrated(GripCalibration)
 }
 
+/// Runs the pointer: owns the engine, the frame timer and the cursor, all on one serial queue
+/// so the engine needs no locking of its own.
+final class PointerRuntime: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "com.ritvikbansal.AirPointer.engine", qos: .userInteractive)
+    private(set) lazy var source = MotionSource(queue: queue)
+
+    private var engine = PointerEngine()
+    private let cursor = CursorDriver()
+    private var timer: DispatchSourceTimer?
+    private var outputEnabled = false
+    private var recorder: TraceRecorder?
+
+    /// Host time until which a click's button is down. The cursor stays put meanwhile, and
+    /// the next press waits its turn.
+    private var clickDownUntil = 0.0
+
+    private var rateWindowStart = 0.0
+    private var rateWindowCount = 0
+    private var clockOffset: Double?
+    private var hadCalibrator = false
+
+    private let state = OSAllocatedUnfairLock(initialState: LiveState())
+
+    /// Delivered on the main queue.
+    var onEvent: (@MainActor (RuntimeEvent) -> Void)?
+
+    init() {
+        source.onSample = { [weak self] sample in self?.handle(sample) }
+    }
+
+}
+
