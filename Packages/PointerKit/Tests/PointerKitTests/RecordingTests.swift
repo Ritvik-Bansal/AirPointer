@@ -217,3 +217,131 @@ struct LooseAirPodTests {
     }
 }
 
+@Suite("Engine behaviour")
+struct EngineTests {
+    @Test("The stream's start-up transient moves nothing and clicks nothing")
+    func warmup() {
+        var engine = makeEngine()
+        var out = PointerEngine.Output()
+        for i in 0..<12 {
+            let t = 5 + Double(i) * 0.02
+            // Sensor fusion starts with a wild reading, as seen after every reconnect.
+            let s = MotionSample(timestamp: t, arrival: t, rotationRate: Vec3(3, 1, 0), userAcceleration: Vec3(1.3, 0.5, 0))
+            let o = engine.ingest(s)
+            out.events += o.events
+            out.snap += o.snap
+        }
+        #expect(out.events.isEmpty)
+        #expect(engine.frame(now: 5.3).move == .zero)
+    }
+
+    @Test("A gap in the stream never makes the cursor jump")
+    func gap() {
+        var engine = makeEngine()
+        var t = 5.0
+        var moved = Vec2.zero
+        _ = engine.frame(now: t)
+        for _ in 0..<60 {
+            t += 0.02
+            _ = engine.ingest(MotionSample(timestamp: t, arrival: t, rotationRate: Vec3(0, 0, -1)))
+            moved += engine.frame(now: t).move
+        }
+        let before = moved
+        #expect(before.x > 0)
+        // The AirPods sleep for four seconds, then wake with the hand somewhere else entirely.
+        t += 4
+        for _ in 0..<12 {
+            t += 0.02
+            _ = engine.ingest(MotionSample(timestamp: t, arrival: t, rotationRate: Vec3(0, 0, 0)))
+            moved += engine.frame(now: t).move
+        }
+        #expect((moved - before).length < 60)
+    }
+
+    @Test("Calibrating pauses the pointer and stores what it learns")
+    func calibration() {
+        var rig = Rig(mount: Rig.mounts[3])
+        var engine = makeEngine()
+        for _ in 0..<20 { _ = engine.ingest(rig.step()) }
+        engine.beginCalibration()
+        #expect(engine.calibrator != nil)
+        for _ in 0..<30 { _ = engine.ingest(rig.step()) }
+        for _ in 0..<20 { _ = engine.ingest(rig.step(rate: 40.0.radians, about: Rig.right)) }
+        for _ in 0..<20 { _ = engine.ingest(rig.step()) }
+        #expect(engine.calibrator == nil)
+        let learned = engine.calibration.forward(for: .right)
+        #expect(learned != nil)
+        if let learned { #expect(angleBetween(learned, rig.forwardInDevice) < 20) }
+        // Nothing moved while it was reading the gesture.
+        var moved = Vec2.zero
+        for i in 0..<20 { moved += engine.frame(now: rig.time + Double(i) / 120).move }
+        #expect(moved.length < 1)
+    }
+
+    @Test("Inverting an axis flips it")
+    func invert() {
+        func endX(invert: Bool) -> Double {
+            var prefs = PointerPreferences()
+            prefs.invertHorizontal = invert
+            var engine = makeEngine(prefs)
+            var rig = Rig(mount: Rig.mounts[0])
+            var samples: [MotionSample] = []
+            for _ in 0..<80 { samples.append(rig.step(rate: -1, about: Rig.up)) }
+            return engine.replay(samples).end.x
+        }
+        #expect(endX(invert: false) > 0)
+        #expect(endX(invert: true) < 0)
+    }
+
+    @Test("Twisting scrolls only when the option is on, and leaves the cursor alone while it does")
+    func twistToScroll() {
+        func run(enabled: Bool) -> (move: Vec2, scroll: Vec2) {
+            var prefs = PointerPreferences()
+            prefs.twistToScroll = enabled
+            var calibration = GripCalibration()
+            calibration.set(Vec3(0, 1, 0), for: .right)
+            var engine = makeEngine(prefs, calibration: calibration)
+            var rig = Rig(mount: Rig.mounts[0])
+            var move = Vec2.zero, scroll = Vec2.zero
+            _ = engine.frame(now: rig.time)
+            for i in 0..<120 {
+                let s = rig.step(rate: i > 20 ? 2.0 : 0, about: Rig.forward)
+                _ = engine.ingest(s)
+                let f = engine.frame(now: s.arrival)
+                move += f.move
+                scroll += f.scroll
+            }
+            return (move, scroll)
+        }
+        let off = run(enabled: false)
+        #expect(off.scroll == .zero)
+        let on = run(enabled: true)
+        #expect(on.scroll.y < -100)
+        #expect(on.move.length < 5)
+    }
+
+    @Test("Saved settings from an older build still load")
+    func preferencesDecode() throws {
+        let old = #"{"speed": 1.4, "tapScheme": "singleTapClicks"}"#
+        let prefs = try JSONDecoder().decode(PointerPreferences.self, from: Data(old.utf8))
+        #expect(prefs.speed == 1.4)
+        #expect(prefs.tapScheme == .singleTapClicks)
+        #expect(prefs.steadiness == PointerPreferences().steadiness)
+    }
+
+    @Test("A trace survives being written out and read back")
+    func traceRoundTrip() {
+        let s = MotionSample(
+            timestamp: 12.34, arrival: 1.5,
+            rotationRate: Vec3(0.1, -0.2, 0.3), userAcceleration: Vec3(0.01, 0.02, -0.03),
+            gravity: Vec3(0.4, 0.6, 0.7), location: .left
+        )
+        let parsed = MotionTrace.parse("0.5 PHASE begin demo\n" + MotionTrace.line(for: s) + "\n0.9 PHASE end demo\n")
+        #expect(parsed.samples.count == 1)
+        #expect(parsed.phases == [MotionTrace.Phase(name: "demo", range: 0..<1)])
+        let back = parsed.samples[0]
+        #expect(back.location == .left)
+        #expect((back.rotationRate - s.rotationRate).length < 1e-4)
+        #expect((back.gravity - s.gravity).length < 1e-4)
+    }
+}
