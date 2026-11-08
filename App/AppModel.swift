@@ -140,4 +140,64 @@ final class AppModel {
         refresh()
     }
 
+    // MARK: Actions
+
+    func toggle() { isOn.toggle() }
+
+    /// Starts the motion stream, which makes macOS ask for Motion & Fitness access the first time.
+    func requestMotionAccess() {
+        motionRequested = true
+        refresh()
+    }
+
+    /// macOS shows its Accessibility prompt only once per app. After that the only way in
+    /// is the settings pane, so open that instead.
+    func requestPointerAccess() {
+        if askedForPointerAccess {
+            Permissions.open(.accessibility)
+        } else {
+            askedForPointerAccess = true
+            Permissions.requestPointerControl()
+        }
+    }
+
+    func beginCalibration() {
+        guard isStreaming else { return }
+        isCalibrating = true
+        runtime.beginCalibration()
+        refresh()
+    }
+
+    func cancelCalibration() {
+        isCalibrating = false
+        runtime.cancelCalibration()
+        refresh()
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        loginItemProblem = LoginItem.set(enabled)
+        launchAtLogin = LoginItem.isEnabled
+    }
+
+    func resetFeel() {
+        let fresh = PointerPreferences()
+        prefs.speed = fresh.speed
+        prefs.acceleration = fresh.acceleration
+        prefs.steadiness = fresh.steadiness
+    }
+
+    func toggleRecording() {
+        if isRecording {
+            runtime.stopRecording()
+            isRecording = false
+            return
+        }
+        let stamp = Date().formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false).dateSeparator(.omitted).timeSeparator(.omitted))
+        let folder = URL.applicationSupportDirectory.appending(path: "AirPointer/Traces", directoryHint: .isDirectory)
+        let url = folder.appending(path: "trace-\(stamp).trace")
+        runtime.startRecording(to: url)
+        lastRecording = url
+        isRecording = true
+    }
+
 }
