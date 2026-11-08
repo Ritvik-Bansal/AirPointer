@@ -319,3 +319,30 @@ final class PointerRuntime: @unchecked Sendable {
     }
 }
 
+/// Writes the motion stream to a plain-text trace that `pointer-replay` and the tests can read.
+final class TraceRecorder {
+    private let handle: FileHandle?
+    private let started = ProcessInfo.processInfo.systemUptime
+
+    init(url: URL) {
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        handle = try? FileHandle(forWritingTo: url)
+    }
+
+    func write(_ s: MotionSample) {
+        var relative = s
+        relative.arrival = s.arrival - started
+        line(MotionTrace.line(for: relative))
+    }
+
+    func mark(phase: String, begin: Bool) {
+        line(String(format: "%.4f PHASE %@ %@", ProcessInfo.processInfo.systemUptime - started, begin ? "begin" : "end", phase))
+    }
+
+    func close() { try? handle?.close() }
+
+    private func line(_ text: String) {
+        handle?.write(Data((text + "\n").utf8))
+    }
+}
