@@ -6,9 +6,11 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "PointerKit", targets: ["PointerKit"]),
+        .executable(name: "pointer-replay", targets: ["PointerReplay"]),
     ],
     targets: [
         .target(name: "PointerKit", swiftSettings: [.swiftLanguageMode(.v5)]),
+        .executableTarget(name: "PointerReplay", dependencies: ["PointerKit"], swiftSettings: [.swiftLanguageMode(.v5)]),
         .testTarget(
             name: "PointerKitTests",
             dependencies: ["PointerKit"],
