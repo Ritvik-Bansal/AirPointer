@@ -134,3 +134,86 @@ struct CaseGripTests {
     }
 }
 
+@Suite("Recorded sessions: one AirPod held loose")
+struct LooseAirPodTests {
+    let trace = Fixture.looseAirPod
+
+    /// This grip was never the default, so learn it the way the app would: from a tilt up.
+    private var calibration: GripCalibration {
+        var c = GripCalibration()
+        // Principal tilt axis of the up/down phase, as measured offline.
+        c.set(Vec3(0.175, -0.153, 0.973), for: .right)
+        return c
+    }
+
+    private func run(_ phase: String) -> ReplayResult {
+        var engine = makeEngine(calibration: calibration)
+        return engine.replay(trace.samples(inPhase: phase))
+    }
+
+    // In this recording the AirPod was pinched between two fingers and the hand was often
+    // still moving when a tap landed. A tap only counts once the hand has stopped, so some
+    // of these are refused on purpose: the same rule that refuses the knocks of handling.
+
+    @Test("Single taps on the AirPod are right-clicks, and never anything else")
+    func singleTaps() {
+        let r = run("free_tap1")
+        #expect((8...10).contains(r.clicks(.right)))
+        #expect(r.clicks(.left) == 0)
+    }
+
+    @Test("Double-taps on the AirPod click when the hand had stopped first")
+    func doubleTaps() {
+        let r = run("free_tap2")
+        // Four of the six pairs. The first two came with the hand turning at 39 and 60 deg/s.
+        #expect(r.clicks(.left) == 4)
+        #expect(r.clicks(.right) == 0)
+    }
+
+    @Test("The whole session: no click of the wrong kind, and handling is refused")
+    func wholeSession() {
+        var engine = makeEngine(calibration: calibration)
+        let r = engine.replay(trace.samples)
+        func phase(_ sample: Int) -> String? { trace.phases.first { $0.range.contains(sample) }?.name }
+
+        var leftInPairs = 0, rightInSingles = 0, loneKnocks = 0, wrong: [String] = []
+        for (item, sample) in zip(r.events, r.eventSamples) {
+            switch (item.event, phase(sample)) {
+            case (.click(.left, 1), "free_tap2"): leftInPairs += 1
+            case (.click(.right, 1), "free_tap1"): rightInSingles += 1
+            case (.click(.right, 1), nil): loneKnocks += 1
+            default: wrong.append("\(item.event) in \(phase(sample) ?? "handling")")
+            }
+        }
+        #expect(leftInPairs == 4)
+        #expect((8...10).contains(rightInSingles))
+        #expect(wrong.isEmpty, "\(wrong)")
+        // A single knock with the hand at rest is, to the sensors, a tap. Three such
+        // right-clicks remain in three minutes of handling (one may be the tenth single tap
+        // resolving after its phase); forty-odd other knocks are refused.
+        #expect(loneKnocks <= 3)
+        #expect(r.knocksIgnored >= 30)
+    }
+
+    @Test("Moving it never clicks", arguments: ["free_still", "free_lr", "free_ud", "free_move"])
+    func noFalseTaps(phase: String) {
+        #expect(run(phase).taps.isEmpty)
+    }
+
+    @Test("Axes hold for a different grip once calibrated")
+    func axes() {
+        let lr = run("free_lr")
+        #expect(lr.extent.x > 5 * lr.extent.y)
+        #expect((lr.path.first { abs($0.x) > 100 }?.x ?? 0) > 0)
+        let ud = run("free_ud")
+        #expect(ud.extent.y > 3 * ud.extent.x)
+        #expect((ud.path.first { abs($0.y) > 200 }?.y ?? 0) < 0)
+    }
+
+    @Test("A held-still AirPod keeps the cursor within a few points")
+    func holdStill() {
+        let r = run("free_still")
+        #expect(r.extent.x < 15 && r.extent.y < 15)
+    }
+}
+
