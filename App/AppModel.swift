@@ -224,4 +224,146 @@ final class AppModel {
     /// No rings for clicks that only happened in a replayed recording.
     private var ringsOnScreen: Bool { showClickRings && !isRehearsing }
 
+    // MARK: Deriving the status
+
+    /// Re-reads the world and settles what the pointer should be doing. Cheap; runs four
+    /// times a second and whenever a choice changes.
+    func refresh() {
+        let live = runtime.snapshot()
+        set(\.motionAccess, isRehearsing ? .allowed : MotionSource.authorization)
+        set(\.canControlPointer, isRehearsing || Permissions.canControlPointer)
+
+        // Run the stream while the pointer is on, or while something on screen is showing it.
+        let wanted = isOn || windowVisible || popoverVisible
+        let allowed = motionAccess == .allowed || (motionAccess == .undetermined && motionRequested)
+        if isRehearsing {
+            // A recording is standing in for the AirPods; leave the real ones alone.
+        } else if wanted && allowed {
+            runtime.start()
+        } else {
+            runtime.stop()
+            // With the source stopped nothing reports a disconnect, so stop believing in a connection.
+            connected = false
+        }
+
+        let streaming = live.isStreaming
+        if streaming != isStreaming {
+            isStreaming = streaming
+            if streaming {
+                hasEverStreamed = true
+                streamBegan = Date()
+                nudgeInterval = 4
+                readAirPods(force: true)
+            } else {
+                streamBegan = nil
+                if handOverride { handOverride = false }
+                if isCalibrating { cancelCalibration() }
+            }
+        }
+        set(\.sensor, live.telemetry.location)
+        set(\.calibrationStage, CalibrationStage(live.calibration))
+        set(\.calibrationProblem, live.calibrationProblem)
+        set(\.isConnectedButSilent, connected && !streaming && (silentSince.map { Date().timeIntervalSince($0) > 6 } ?? false))
+
+        // Connected but silent: ask for the stream again, backing off so a slow reconnect is
+        // not interrupted by the next request.
+        if wanted, allowed, connected, !streaming, !isRehearsing {
+            let since = silentSince ?? Date()
+            silentSince = since
+            if Date().timeIntervalSince(since) > 2.5, Date().timeIntervalSince(lastNudge) > nudgeInterval {
+                lastNudge = Date()
+                nudgeInterval = min(nudgeInterval * 2, 30)
+                runtime.source.nudge()
+            }
+        } else {
+            silentSince = nil
+        }
+
+        updateWornGuess(live)
+        if streaming || windowVisible || popoverVisible { readAirPods(force: false) }
+
+        let worn = looksWorn && !handOverride
+        // Give the worn guess time to speak before the pointer goes live.
+        let settled = streamBegan.map { Date().timeIntervalSince($0) >= 1.2 } ?? false
+        let next: Status = if motionAccess == .denied {
+            .motionDenied
+        } else if !canControlPointer {
+            .needsPointerAccess
+        } else if !isOn {
+            .off
+        } else if !streaming {
+            .asleep
+        } else if worn {
+            .inEars
+        } else if !settled {
+            .waking
+        } else if isCalibrating {
+            .calibrating
+        } else {
+            .pointing
+        }
+        set(\.status, next)
+        runtime.setOutput(enabled: next == .pointing)
+
+        // Sound: keep it on the Mac while the case is a pointer. Ride through short stalls
+        // rather than flapping, and give it back only when the AirPods turn out to be worn.
+        if streaming { lastStreamed = Date() }
+        let recentlyStreaming = lastStreamed.map { Date().timeIntervalSince($0) < 5 } ?? false
+        let guardSound = keepSoundOnMac && isOn && !isRehearsing && !worn && recentlyStreaming
+            && (next == .pointing || next == .calibrating || audio.isGuarding)
+        audio.setGuarding(guardSound, handBack: worn)
+
+        // A pointer that is switched on must never nap, even between sessions: the first
+        // samples after the lid opens have to be handled at once.
+        stayAwake(isOn || isRehearsing)
+    }
+
+    /// A menu-bar app with no window open is exactly what App Nap looks for, and a napping
+    /// app's timers stall: the cursor would stutter or stop. While the pointer is on, tell
+    /// macOS this is work the user is waiting on. Idle, the app uses no measurable CPU.
+    private func stayAwake(_ needed: Bool) {
+        if needed, activity == nil {
+            activity = ProcessInfo.processInfo.beginActivity(
+                options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+                reason: "Moving the pointer with the AirPods case"
+            )
+        } else if !needed, let token = activity {
+            ProcessInfo.processInfo.endActivity(token)
+            activity = nil
+        }
+    }
+
+    /// Worn AirPods report gravity straight down their vertical axis; a case in the hand
+    /// rarely sits that way. It is a guess, and it leans toward caution: one second of
+    /// looking worn pauses the pointer, and it stays paused until the AirPods go back in
+    /// their case, macOS reports them docked, or the user says they are in the hand.
+    private func updateWornGuess(_ live: LiveState) {
+        guard live.isStreaming else {
+            looksWornTicks = 0
+            looksWorn = false
+            return
+        }
+        if airPods?.isDocked == true {
+            // The case is reporting its battery, which it does only through a docked AirPod.
+            looksWornTicks = 0
+            looksWorn = false
+            return
+        }
+        looksWornTicks = live.telemetry.gravity.z < -0.78 ? looksWornTicks + 1 : 0
+        if looksWornTicks >= 4, !looksWorn {
+            looksWorn = true
+            readAirPods(force: true)
+        }
+    }
+
+    private func readAirPods(force: Bool) {
+        // Battery and docking change slowly, and each reading costs a second of work elsewhere.
+        guard force || Date().timeIntervalSince(lastAirPodsRead) > 90 else { return }
+        lastAirPodsRead = Date()
+        airPodsMonitor.refresh { [weak self] info in
+            guard let self else { return }
+            self.set(\.airPods, info)
+        }
+    }
+
 }
