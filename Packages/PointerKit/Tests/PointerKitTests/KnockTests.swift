@@ -128,5 +128,72 @@ struct KnockTests {
         #expect(hand.clicks.isEmpty)
     }
 
+    @Test("Two taps exactly one window apart are still a pair")
+    func windowIsExact() {
+        var prefs = PointerPreferences()
+        prefs.tapWindow = 0.4
+        var hand = Hand(prefs)
+        hand.tap()
+        hand.hold(0.38)   // nineteen samples, then the second tap on the twentieth: 0.40 s apart
+        hand.tap()
+        hand.hold(0.6)
+        #expect(hand.clicks == [.click(.left, count: 1)])
+    }
+
+    @Test("Turning taps off mid-gesture leaves no click waiting")
+    func tapsOffMidGesture() {
+        var hand = Hand()
+        hand.tap()
+        hand.hold(0.1)
+        hand.engine.settings.tapsEnabled = false
+        hand.hold(1.0)
+        hand.engine.settings.tapsEnabled = true
+        hand.hold(1.0)
+        #expect(hand.clicks.isEmpty)
+    }
+
+    @Test("Turning taps off during a drag lets go of the button")
+    func tapsOffMidDrag() {
+        var prefs = PointerPreferences()
+        prefs.thirdTap = .dragLock
+        var hand = Hand(prefs)
+        hand.tap(); hand.hold(0.26); hand.tap(); hand.hold(0.26); hand.tap()
+        hand.hold(0.5)
+        #expect(hand.clicks == [.click(.left, count: 1), .buttonDown(.left)])
+        hand.engine.settings.tapsEnabled = false
+        hand.hold(0.1)
+        #expect(hand.clicks.last == .buttonUp(.left))
+    }
+
+    @Test("A tap made while the pointer was off counts for nothing once it is on")
+    func staleGestureOnEnable() {
+        var hand = Hand()
+        hand.tap()
+        hand.hold(0.1)
+        hand.events += hand.engine.cancelGestures()
+        hand.hold(1.0)
+        #expect(hand.clicks.isEmpty)
+    }
+
+    @Test("If the AirPods drop out mid-gesture, the gesture is dropped too")
+    func dropoutMidGesture() {
+        var hand = Hand()
+        hand.tap()
+        hand.hold(0.1)
+        hand.lose(2.0)
+        hand.hold(1.5)
+        #expect(hand.clicks.isEmpty)
+    }
+
+    @Test("A few lost samples do not stop taps working")
+    func tapsAfterShortHole() {
+        var hand = Hand()
+        hand.hold(0.5)
+        hand.lose(0.12)
+        hand.hold(0.5)
+        hand.tap(); hand.hold(0.26); hand.tap()
+        hand.hold(0.6)
+        #expect(hand.clicks == [.click(.left, count: 1)])
+    }
 }
 
