@@ -63,3 +63,57 @@ struct AxisMapperTests {
     }
 }
 
+@Suite("Calibration")
+struct AxisCalibratorTests {
+    /// Holds still, then performs `gesture`, and returns the calibrator.
+    private func run(mount: simd_quatd, rate: Double, about axis: Vec3, for duration: Double, stillFirst: Double = 0.6) -> AxisCalibrator {
+        var rig = Rig(mount: mount)
+        var cal = AxisCalibrator()
+        for _ in 0..<Int(stillFirst / rig.dt) { cal.ingest(rig.step()) }
+        for _ in 0..<Int(duration / rig.dt) { cal.ingest(rig.step(rate: rate, about: axis)) }
+        for _ in 0..<20 { cal.ingest(rig.step()) }
+        return cal
+    }
+
+    @Test("A tilt up teaches which way the case points", arguments: Rig.mounts)
+    func learnsForward(mount: simd_quatd) {
+        let cal = run(mount: mount, rate: 40.0.radians, about: Rig.right, for: 0.4)
+        guard case .done(let forward) = cal.state else {
+            Issue.record("calibration did not finish: \(cal.state), \(String(describing: cal.problem))")
+            return
+        }
+        #expect(angleBetween(forward, Rig(mount: mount).forwardInDevice) < 12)
+    }
+
+    @Test("A sideways turn is refused, not learned")
+    func refusesSideways() {
+        // Mostly a turn, with a little tilt mixed in so capture starts.
+        let axis = simd_normalize(Rig.up * 1.0 + Rig.right * 0.75)
+        var rig = Rig(mount: Rig.mounts[1])
+        var cal = AxisCalibrator()
+        for _ in 0..<30 { cal.ingest(rig.step()) }
+        // Start with a clean tilt so the onset test passes, then swing into a turn.
+        for _ in 0..<3 { cal.ingest(rig.step(rate: 0.7, about: Rig.right)) }
+        for _ in 0..<25 { cal.ingest(rig.step(rate: 1.2, about: axis)) }
+        for _ in 0..<20 { cal.ingest(rig.step()) }
+        if case .done = cal.state { Issue.record("a sideways turn was accepted") }
+        #expect(cal.problem == .sideways)
+    }
+
+    @Test("A twitch is too small to learn from")
+    func refusesTinyMotion() {
+        let cal = run(mount: Rig.mounts[2], rate: 25.0.radians, about: Rig.right, for: 0.1)
+        if case .done = cal.state { Issue.record("a 2.5 degree twitch was accepted") }
+        #expect(cal.problem == .tooSmall)
+    }
+
+    @Test("Nothing is read until the hand has settled")
+    func waitsForStillness() {
+        var rig = Rig(mount: Rig.mounts[0])
+        var cal = AxisCalibrator()
+        for _ in 0..<40 { cal.ingest(rig.step(rate: 1.0, about: Rig.right)) }
+        #expect(cal.state == .settling)
+        for _ in 0..<30 { cal.ingest(rig.step()) }
+        #expect(cal.state == .ready)
+    }
+}
