@@ -42,3 +42,18 @@ Measured on this Mac with these AirPods, not assumed:
 - Terminology: "the case" is the thing in the hand; "tap" is a finger on the case; "click" is what the Mac receives; "calibrate" teaches the app which way the case points.
 - Undecided: whether twisting the case should scroll by default (built, off until tried); whether the app is ever distributed.
 
+## Brand Commitments
+
+Working name: AirPointer. No logo, palette, or voice has been set by the user.
+
+## Evidence on Hand
+
+Three guided recordings of the user's own hand: an AirPod held loose, the case held and aimed, single and double taps on the case, and free movement. They are the tuning data and the regression fixtures (`Packages/PointerKit/Tests/PointerKitTests/Fixtures`). On the docked-case recording, replayed end to end, the engine finds all 10 single taps and all 6 double-taps, clicks nowhere else, and refuses the knocks made picking the case up and putting it away. The user has since used the finished pointer on their own Mac and reported that it works really well (November 2026). That is one person's first sessions with it, not a long trial.
+
+## Product Principles
+
+1. The hand is the interface. Whatever the screen shows should mirror what the hand is doing, at once.
+2. Never click by accident. A missed tap costs a second tap; a false click can cost real work.
+3. Say what is wrong and how to fix it. The failure modes are physical (lid closed, a setting on, a permission missing), so name the physical fix.
+4. Stay out of the way. It is a pointer, not a place to spend time.
+5. Tune against the recordings, then against the hand. Numbers first, feel last, and feel wins.
