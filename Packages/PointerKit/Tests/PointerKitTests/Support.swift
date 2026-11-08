@@ -3,6 +3,19 @@ import simd
 import Testing
 @testable import PointerKit
 
+/// A recorded session of the user's own hand, loaded once.
+enum Fixture {
+    static let caseGrip = load("case-grip")
+    static let looseAirPod = load("loose-airpod")
+
+    private static func load(_ name: String) -> MotionTrace {
+        guard let url = Bundle.module.url(forResource: name, withExtension: "trace", subdirectory: "Fixtures"),
+              let text = try? String(contentsOf: url, encoding: .utf8)
+        else { return MotionTrace() }
+        return MotionTrace.parse(text)
+    }
+}
+
 /// A rigid body in a room where +z is up, +y is forward and +x is to the right. Produces
 /// the samples an earbud fixed to it would report, whatever way round the earbud is mounted.
 struct Rig {

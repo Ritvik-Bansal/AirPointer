@@ -12,6 +12,7 @@ let package = Package(
         .testTarget(
             name: "PointerKitTests",
             dependencies: ["PointerKit"],
+            resources: [.copy("Fixtures")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]
