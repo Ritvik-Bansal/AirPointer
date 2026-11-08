@@ -197,3 +197,69 @@ struct KnockTests {
     }
 }
 
+@Suite("Stream holes")
+struct StreamHoleTests {
+    /// Turns right at a steady rate, losing `hole` seconds part-way, and returns the cursor's x after each frame.
+    private func track(hole: Double) -> [Double] {
+        var engine = makeEngine()
+        var rig = Rig(mount: Rig.mounts[0])
+        var x = 0.0
+        var xs: [Double] = []
+        var now = rig.time
+        _ = engine.frame(now: now)
+        for i in 0..<150 {
+            if i == 80 { for _ in 0..<Int((hole / 0.02).rounded()) { _ = rig.step(rate: -1.2, about: Rig.up) } }
+            let s = rig.step(rate: -1.2, about: Rig.up)
+            while now < s.arrival {
+                x += engine.frame(now: now).move.x
+                xs.append(x)
+                now += 1.0 / 120
+            }
+            _ = engine.ingest(s)
+        }
+        return xs
+    }
+
+    @Test("A short hole never pulls the cursor backwards")
+    func noPullBack() {
+        let xs = track(hole: 0.14)
+        let worstStep = zip(xs.dropFirst(), xs).map { $0 - $1 }.min() ?? 0
+        #expect(worstStep > -0.5, "cursor stepped back \\(-worstStep) pt")
+    }
+
+    @Test("After a short hole the cursor is moving again within a few frames")
+    func resumesAtOnce() {
+        let xs = track(hole: 0.14)
+        // Travel over the last half second should be close to the steady rate, not frozen for a warm-up.
+        #expect(xs.count > 300)
+        let steady = xs[xs.count - 1] - xs[xs.count - 61]
+        let before = xs[180] - xs[120]   // half a second of travel, all of it before the hole
+        #expect(steady > before * 0.9)
+    }
+
+    @Test("A new calibration takes effect while the stream is running")
+    func calibrationMidStream() {
+        var rig = Rig(mount: Rig.mounts[2])
+        // Start with a grip that is wrong by a quarter turn: "forward" is really the hand's right.
+        var wrong = GripCalibration()
+        wrong.set(rig.mount.inverse.act(Rig.right), for: .right)
+        var engine = makeEngine(calibration: wrong)
+
+        func tiltUp(_ engine: inout PointerEngine, _ rig: inout Rig) -> Double {
+            var samples: [MotionSample] = []
+            for _ in 0..<60 { samples.append(rig.step(rate: 1.0, about: Rig.right)) }
+            for _ in 0..<60 { samples.append(rig.step(rate: -1.0, about: Rig.right)) }
+            return engine.replay(samples).extent.y
+        }
+        // With the wrong grip a tilt reads as a twist, which moves nothing.
+        let before = tiltUp(&engine, &rig)
+
+        var learned = GripCalibration()
+        learned.set(rig.forwardInDevice, for: .right)
+        engine.calibration = learned
+        let after = tiltUp(&engine, &rig)
+
+        #expect(after > 400)
+        #expect(before < after / 10)
+    }
+}
