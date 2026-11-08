@@ -93,3 +93,39 @@ struct Shortcut: Codable, Equatable {
     }
 }
 
+/// System-wide hot keys. These work without any permission and from any app.
+@MainActor
+final class HotKeys {
+    static let shared = HotKeys()
+
+    private var refs: [UInt32: EventHotKeyRef] = [:]
+    private var actions: [UInt32: () -> Void] = [:]
+    private var installed = false
+
+    func set(id: UInt32, shortcut: Shortcut?, action: @escaping () -> Void) {
+        if let ref = refs.removeValue(forKey: id) { UnregisterEventHotKey(ref) }
+        actions[id] = action
+        guard let shortcut else { return }
+        install()
+        var ref: EventHotKeyRef?
+        let hotKeyID = EventHotKeyID(signature: OSType(0x4150_5452), id: id) // 'APTR'
+        if RegisterEventHotKey(shortcut.keyCode, shortcut.modifiers, hotKeyID, GetApplicationEventTarget(), 0, &ref) == noErr, let ref {
+            refs[id] = ref
+        }
+    }
+
+    fileprivate func fire(_ id: UInt32) { actions[id]?() }
+
+    private func install() {
+        guard !installed else { return }
+        installed = true
+        var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
+            var id = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
+            let which = id.id
+            DispatchQueue.main.async { MainActor.assumeIsolated { HotKeys.shared.fire(which) } }
+            return noErr
+        }, 1, &spec, nil, nil)
+    }
+}
