@@ -9,5 +9,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "PointerKit", swiftSettings: [.swiftLanguageMode(.v5)]),
+        .testTarget(
+            name: "PointerKitTests",
+            dependencies: ["PointerKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
     ]
 )
