@@ -366,4 +366,44 @@ final class AppModel {
         }
     }
 
+    // MARK: Plumbing
+
+    private func pushSettings() {
+        let width = NSScreen.screens.first?.frame.width ?? 1512
+        runtime.apply(prefs.engineSettings(displayScale: clamp(width / 1512, 0.8, 2)))
+    }
+
+    private func registerShortcuts() {
+        HotKeys.shared.set(id: 1, shortcut: toggleShortcut) { [weak self] in self?.toggle() }
+        HotKeys.shared.set(id: 2, shortcut: calibrateShortcut) { [weak self] in
+            guard let self else { return }
+            if self.isCalibrating { self.cancelCalibration() } else { self.beginCalibration() }
+        }
+    }
+
+    /// Switches to a recorded stream. Development only; see `Rehearsal`.
+    func beginRehearsal(_ trace: MotionTrace) {
+        isRehearsing = true
+        runtime.stop()
+        runtime.rehearse(trace)
+        refresh()
+    }
+
+    /// Assigns only on change, so views are not redrawn four times a second for nothing.
+    private func set<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<AppModel, T>, _ value: T) {
+        if self[keyPath: keyPath] != value { self[keyPath: keyPath] = value }
+    }
+
+    private func save<T: Encodable>(_ value: T?, _ key: String) {
+        if let value, let data = try? JSONEncoder().encode(value) {
+            defaults.set(data, forKey: key)
+        } else {
+            defaults.set(Data(), forKey: key)
+        }
+    }
+
+    private static func load<T: Decodable>(_ key: String, from defaults: UserDefaults) -> T? {
+        guard let data = defaults.data(forKey: key), !data.isEmpty else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
+    }
 }
