@@ -59,3 +59,74 @@ struct Hand {
     var clicks: [PointerEvent] { events.filter { if case .tap = $0 { false } else { true } } }
 }
 
+@Suite("Telling taps from knocks")
+struct KnockTests {
+    @Test("Two taps on a steady hand click")
+    func steadyDoubleTap() {
+        var hand = Hand()
+        hand.tap()
+        hand.hold(0.26)
+        hand.tap()
+        hand.hold(0.6)
+        #expect(hand.clicks == [.click(.left, count: 1)])
+    }
+
+    @Test("One tap on a steady hand is a right-click, after the window")
+    func steadySingleTap() {
+        var hand = Hand()
+        hand.tap()
+        hand.hold(0.3)
+        #expect(hand.clicks.isEmpty)
+        hand.hold(0.3)
+        #expect(hand.clicks == [.click(.right, count: 1)])
+    }
+
+    @Test("A knock while the case is being moved is not a tap", arguments: [60.0, 150.0, 600.0])
+    func knockWhileMoving(speed: Double) {
+        var hand = Hand()
+        hand.turn(speed, for: 0.8, knockAt: 0.5)
+        hand.hold(1.0)
+        #expect(hand.clicks.isEmpty)
+        // The knock itself, and at speed the lurch of starting and stopping, are all refused.
+        #expect(hand.engine.telemetry.knocksIgnored >= 1)
+    }
+
+    @Test("A knock just as the hand stops is not a tap either")
+    func knockOnStopping() {
+        var hand = Hand()
+        hand.turn(120, for: 0.5)
+        hand.hold(0.1)   // stopped a tenth of a second ago
+        hand.tap()
+        hand.hold(1.0)
+        #expect(hand.clicks.isEmpty)
+    }
+
+    @Test("A bump while the case lies on the table is not a tap")
+    func bumpOnTable() {
+        var hand = Hand()
+        hand.rest(2.0, knockAt: 1.2)
+        hand.rest(1.0)
+        #expect(hand.clicks.isEmpty)
+        #expect(hand.engine.telemetry.knocksIgnored == 1)
+    }
+
+    @Test("Putting the case down does not right-click")
+    func puttingDown() {
+        var hand = Hand()
+        hand.turn(8, for: 0.6)   // lowering it gently
+        hand.tap()               // it touches the table
+        hand.rest(1.0)           // and lies there
+        #expect(hand.clicks.isEmpty)
+    }
+
+    @Test("A tap followed by the hand swinging away is called off")
+    func wanderingOff() {
+        var hand = Hand()
+        hand.tap()
+        hand.turn(90, for: 0.3)  // 27 degrees: this is handling, not waiting for a second tap
+        hand.hold(0.6)
+        #expect(hand.clicks.isEmpty)
+    }
+
+}
+
