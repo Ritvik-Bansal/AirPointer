@@ -26,3 +26,24 @@ enum Permissions {
     }
 }
 
+// MARK: Launch at login
+
+enum LoginItem {
+    static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
+
+    /// - Returns: A plain-language reason when it could not be changed.
+    @discardableResult
+    static func set(_ enabled: Bool) -> String? {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            return nil
+        } catch {
+            return "macOS would not change the login item. Move AirPointer to Applications and try again."
+        }
+    }
+}
+
