@@ -200,4 +200,28 @@ final class AppModel {
         isRecording = true
     }
 
+    // MARK: Events from the engine
+
+    private func handle(_ event: RuntimeEvent) {
+        switch event {
+        case .tap:
+            break
+        case .click(let button, let count, let at):
+            clicksMade += 1
+            if ringsOnScreen { hud.ring(at: at, kind: button == .right ? .secondary : count > 1 ? .double : .click) }
+        case .dragBegan(let at):
+            if ringsOnScreen { hud.ring(at: at, kind: .grab) }
+        case .dragEnded(let at):
+            if ringsOnScreen { hud.ring(at: at, kind: .click) }
+        case .calibrated(let learned):
+            calibration = learned
+            isCalibrating = false
+            calibrationsLearned += 1
+            refresh()
+        }
+    }
+
+    /// No rings for clicks that only happened in a replayed recording.
+    private var ringsOnScreen: Bool { showClickRings && !isRehearsing }
+
 }
