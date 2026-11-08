@@ -176,5 +176,146 @@ final class PointerRuntime: @unchecked Sendable {
         }
     }
 
+    // MARK: Engine queue
+
+    private func quiesce() {
+        cursor.releaseAll()
+        for event in engine.reset() { perform(event) }
+    }
+
+    private func handle(_ s: MotionSample) {
+        recorder?.write(s)
+
+        let out = engine.ingest(s)
+        if out.snap != .zero, outputEnabled { cursor.rewind(by: out.snap) }
+        var tapped: Double?
+        for event in out.events {
+            if case .tap(let strength) = event { tapped = strength }
+            perform(event)
+        }
+
+        // Stream statistics.
+        rateWindowCount += 1
+        var rate: Double?
+        if s.arrival - rateWindowStart >= 0.5 {
+            if rateWindowStart > 0 { rate = Double(rateWindowCount) / (s.arrival - rateWindowStart) }
+            rateWindowStart = s.arrival
+            rateWindowCount = 0
+        }
+        let offset = s.arrival - s.timestamp
+        clockOffset = min(offset, (clockOffset ?? offset) + 0.00004)
+        let lateness = (offset - (clockOffset ?? offset)) * 1000
+
+        // Calibration finishing is the engine clearing its calibrator.
+        let calibrating = engine.calibrator != nil
+        if hadCalibrator, !calibrating {
+            hadCalibrator = false
+            let learned = engine.calibration
+            emit(.calibrated(learned))
+        }
+
+        let t = engine.telemetry
+        let tap = tapped
+        let newRate = rate
+        let imagined = cursor.rehearsalPoint
+        let calState = engine.calibrator?.state
+        let calProblem = engine.calibrator?.problem
+        state.withLock { live in
+            live.telemetry = t
+            live.lastSample = s.arrival
+            if let newRate { live.sampleRate = newRate }
+            live.rehearsalCursor = imagined
+            live.deliveryJitter += (lateness - live.deliveryJitter) * 0.05
+            live.calibration = calState
+            live.calibrationProblem = calProblem
+            live.history.append(SignalPoint(yaw: Float(t.yaw), pitch: Float(t.pitch), roll: Float(t.roll), tapLevel: Float(t.tapLevel)))
+            if live.history.count > 300 { live.history.removeFirst(live.history.count - 300) }
+            if let tap {
+                live.tapCount += 1
+                live.lastTapStrength = tap
+                live.lastTapAt = s.arrival
+            }
+        }
+        ensureTimer()
+    }
+
+    private func perform(_ event: PointerEvent) {
+        switch event {
+        case .tap(let strength):
+            emit(.tap(strength: strength))
+        case .click(let button, let count):
+            guard outputEnabled else { return }
+            afterAnyClickInFlight {
+                self.cursor.press(button, count: count)
+                // A real button is down for a moment; some apps ignore a press and release
+                // that land in the same instant. The cursor does not move while it is down.
+                self.clickDownUntil = ProcessInfo.processInfo.systemUptime + 0.012
+                self.emit(.click(button, count: count, at: self.cursor.location))
+                self.queue.asyncAfter(deadline: .now() + 0.012) { self.cursor.release(button, count: count) }
+            }
+        case .buttonDown(let button):
+            guard outputEnabled else { return }
+            afterAnyClickInFlight {
+                self.cursor.press(button)
+                self.emit(.dragBegan(at: self.cursor.location))
+            }
+        case .buttonUp(let button):
+            afterAnyClickInFlight {
+                if self.cursor.release(button) { self.emit(.dragEnded(at: self.cursor.location)) }
+            }
+        }
+    }
+
+    /// Runs `action` now, or just after the click in progress has let go, so one click's
+    /// release can never land on the next one's press.
+    private func afterAnyClickInFlight(_ action: @escaping () -> Void) {
+        let wait = clickDownUntil + 0.006 - ProcessInfo.processInfo.systemUptime
+        if wait > 0 {
+            queue.asyncAfter(deadline: .now() + wait) { self.afterAnyClickInFlight(action) }
+        } else {
+            action()
+        }
+    }
+
+    private func emit(_ event: RuntimeEvent) {
+        guard let onEvent else { return }
+        DispatchQueue.main.async { MainActor.assumeIsolated { onEvent(event) } }
+    }
+
+    /// The frame timer runs only while samples are arriving.
+    private func ensureTimer() {
+        guard timer == nil else { return }
+        // 120 a second covers every Mac display; on a 60 Hz screen the extra ticks cost nothing visible.
+        let t = DispatchSource.makeTimerSource(flags: .strict, queue: queue)
+        t.schedule(deadline: .now(), repeating: 1.0 / 120, leeway: .microseconds(500))
+        t.setEventHandler { [weak self] in self?.tick() }
+        t.resume()
+        timer = t
+    }
+
+    private func tick() {
+        let now = ProcessInfo.processInfo.systemUptime
+        let frame = engine.frame(now: now)
+        if outputEnabled, now >= clickDownUntil {
+            cursor.move(by: frame.move)
+            if frame.scroll != .zero { cursor.scroll(by: frame.scroll) }
+        }
+        let last = state.withLock { $0.lastSample }
+        if now - last > 0.8 {
+            // The stream has stopped: the lid closed or the AirPods dropped. Let go of
+            // everything and stop ticking until samples return.
+            timer?.cancel()
+            timer = nil
+            quiesce()
+            rateWindowStart = 0
+            rateWindowCount = 0
+            clockOffset = nil
+            state.withLock {
+                $0.sampleRate = 0
+                $0.telemetry.velocity = .zero
+                $0.telemetry.holding = false
+            }
+        }
+    }
 }
 
