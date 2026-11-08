@@ -93,3 +93,101 @@ struct RateShaperTests {
     }
 }
 
+@Suite("Playout")
+struct PlayoutTests {
+    /// Pushes constant-velocity samples with a repeating bursty arrival pattern, then lets the
+    /// hand come to rest, pulling frames at 120 Hz throughout.
+    private func run(velocity: Vec2, seconds: Double, arrivalDelays: [Double]) -> (pulled: Vec2, steps: [Vec2]) {
+        var playout = Playout()
+        var pulled = Vec2.zero
+        var steps: [Vec2] = []
+        let moving = Int(seconds / 0.02)
+        var arrivals: [(arrival: Double, ts: Double, v: Vec2)] = []
+        for i in 0..<(moving + 15) {
+            let ts = Double(i + 1) * 0.02
+            arrivals.append((ts + 0.03 + arrivalDelays[i % arrivalDelays.count], ts, i < moving ? velocity : .zero))
+        }
+        var next = 0
+        var now = 0.0
+        while now < seconds + 0.8 {
+            while next < arrivals.count, arrivals[next].arrival <= now {
+                playout.push(velocity: arrivals[next].v, dt: 0.02, sensorTime: arrivals[next].ts, arrival: arrivals[next].arrival)
+                next += 1
+            }
+            let d = playout.pull(now: now)
+            pulled += d
+            steps.append(d)
+            now += 1.0 / 120
+        }
+        return (pulled, steps)
+    }
+
+    // Shaped like the measured stream: samples arriving in pairs, then a gap of up to 58 ms
+    // (the 99th percentile on the real recordings). Delivery stays in order, as Bluetooth does.
+    private let bursty = [0.0, 0.019, 0.004, 0.0, 0.038, 0.019, 0.001, 0.0, 0.002, 0.019]
+
+    @Test("No motion is lost or invented, however the samples arrive")
+    func conserves() {
+        let v = Vec2(900, -350)
+        let r = run(velocity: v, seconds: 2, arrivalDelays: bursty)
+        #expect((r.pulled - v * 2).length < 1e-6)
+    }
+
+    @Test("If the stream dies mid-move, the cursor stops within a few frames of where it was")
+    func streamDiesMidMove() {
+        var playout = Playout()
+        let v = Vec2(1000, 0)
+        var pulled = Vec2.zero
+        _ = playout.pull(now: 0)
+        for i in 1...50 {
+            let ts = Double(i) * 0.02
+            playout.push(velocity: v, dt: 0.02, sensorTime: ts, arrival: ts + 0.03)
+            pulled += playout.pull(now: ts + 0.03)
+        }
+        for i in 1...240 { pulled += playout.pull(now: 1.03 + Double(i) / 120) }
+        // At most `maxLead` of extra travel, and it never keeps going.
+        #expect(pulled.x >= 1000 - 1e-6)
+        #expect(pulled.x <= 1000 + v.x * playout.maxLead + 1e-6)
+    }
+
+    @Test("Steady motion stays steady through delivery gaps")
+    func smoothThroughGaps() {
+        let v = Vec2(1200, 0)
+        let ideal = v.x / 120
+        let steps = run(velocity: v, seconds: 2, arrivalDelays: bursty).steps
+        // Skip start-up and the tail after the hand stops.
+        let mid = steps[60..<220].map(\.x)
+        let worst = mid.map { abs($0 - ideal) / ideal }.max() ?? 1
+        #expect(worst < 0.25, "frame steps strayed \(Int(worst * 100))% from ideal")
+        // Without dead reckoning a 58 ms gap would stall the cursor completely.
+        #expect((mid.min() ?? 0) > ideal * 0.75)
+    }
+
+    @Test("Rewinding takes back exactly the recent motion")
+    func rewind() {
+        var p = Playout()
+        for i in 1...10 {
+            p.push(velocity: Vec2(500, 0), dt: 0.02, sensorTime: Double(i) * 0.02, arrival: Double(i) * 0.02 + 0.03)
+        }
+        // Drop everything after t = 0.14: samples at 0.16, 0.18, 0.20.
+        p.rewind(to: 0.14 + 1e-9)
+        _ = p.pull(now: 1.0)
+        let settled = p.settle()
+        var total = settled
+        for i in 0..<120 { total += p.pull(now: 1.0 + Double(i) / 120) }
+        #expect(abs(total.x - 7 * 10) < 1e-6)
+    }
+
+    @Test("Settling lands the cursor exactly on target and stops it")
+    func settle() {
+        var p = Playout()
+        _ = p.pull(now: 0)
+        p.push(velocity: Vec2(1000, 0), dt: 0.02, sensorTime: 0.02, arrival: 0.05)
+        _ = p.pull(now: 0.05)
+        let d = p.settle()
+        #expect(d.x > 0)
+        var after = Vec2.zero
+        for i in 1...30 { after += p.pull(now: 0.05 + Double(i) / 120) }
+        #expect(after.length < 1e-9)
+    }
+}
