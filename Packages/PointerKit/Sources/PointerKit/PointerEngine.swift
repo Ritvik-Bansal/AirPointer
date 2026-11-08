@@ -217,6 +217,201 @@ public struct PointerEngine: Sendable {
         recentMotion.removeAll()
     }
 
+    // MARK: Samples
+
+    public mutating func ingest(_ s: MotionSample) -> Output {
+        var out = Output()
+        out.events = queued
+        queued.removeAll()
+
+        var dt = 0.02
+        if let last = lastTimestamp {
+            let step = s.timestamp - last
+            if step <= 0 || step > 0.5 {
+                // The AirPods slept or reconnected. Their sensor fusion starts over, and so
+                // does everything here, including any gesture that was under way.
+                warmup = 0
+                haltMotion()
+                detector.reset()
+                speeds.removeAll()
+                out.events += sequencer.reset()
+            } else if step > 0.05 {
+                // A few samples were lost in the air; the stream itself carried on. Keep what
+                // was dead-reckoned into the hole rather than snapping back.
+                playout.bridge(now: s.arrival)
+                scrollPlayout.bridge(now: s.arrival)
+            } else {
+                dt = max(step, 0.005)
+            }
+        }
+        let lastTimestampBeforeThis = lastTimestamp ?? -Double.infinity
+        lastTimestamp = s.timestamp
+
+        warmup += 1
+        guard warmup > warmupSamples else { return out }
+
+        if mapperLocation != s.location {
+            mapperLocation = s.location
+            mapper.forward = calibration.forward(for: s.location) ?? Self.defaultForward(for: s.location)
+        }
+        speeds.append((s.timestamp, s.rotationRate.length.degrees))
+        if speeds.count > 40 { speeds.removeFirst(speeds.count - 40) }
+        let rates = mapper.map(rotationRate: s.rotationRate, gravity: s.gravity)
+        telemetry.yaw = rates.yaw.degrees
+        telemetry.pitch = rates.pitch.degrees
+        telemetry.roll = rates.roll.degrees
+        if let up = (-s.gravity).unit {
+            telemetry.elevation = asin(clamp(mapper.forward.dot(up), -1, 1)).degrees
+        }
+        telemetry.gravity = s.gravity
+        telemetry.attitude = s.attitude
+        telemetry.location = s.location
+        telemetry.timestamp = s.timestamp
+
+        if calibrator != nil {
+            calibrator?.ingest(s)
+            if case .done(let forward)? = calibrator?.state {
+                calibration.set(forward, for: s.location)
+                mapper.forward = forward
+                calibrator = nil
+            }
+            telemetry.velocity = .zero
+            return out
+        }
+
+        let motion = Vec2(telemetry.yaw, telemetry.pitch) * dt
+        recentMotion.append((s.timestamp, motion))
+        if recentMotion.count > 8 { recentMotion.removeFirst() }
+        let wasHolding = lastTimestampBeforeThis <= holdUntil
+
+        // Taps.
+        if settings.tapsEnabled {
+            let tap = detector.ingest(s)
+            // Taps are found one sample late, so that is where the gesture clock stands. A
+            // lone tap is resolved before a new one is counted: two taps exactly a window
+            // apart are still a pair.
+            let clock = tap.map { $0.time - 1e-9 } ?? s.timestamp - 0.02
+            var resolved = sequencer.advance(to: clock)
+            if !resolved.isEmpty {
+                // A lone tap becomes a right-click only if the hand is still there, holding
+                // the case where it was. A case just put down goes dead still; a case being
+                // picked up has wandered off.
+                if wander.length > settings.gestureDrift * 0.6 || !isHandHeld(until: clock + 0.02, over: 0.24) {
+                    resolved = []
+                    telemetry.knocksIgnored += 1
+                    debt = .zero
+                }
+                out.events += resolved
+                holdUntil = min(holdUntil, s.timestamp + 0.04)
+            }
+
+            if let tap {
+                let continues = sequencer.isMidGesture(at: tap.time)
+                telemetry.lastJolt.time = tap.time
+                telemetry.lastJolt.leadIn = leadInPeak(before: tap.time) ?? -1
+                telemetry.lastJolt.stillness = meanSpeed(until: tap.time - 0.03, over: 0.5) ?? -1
+                telemetry.lastJolt.continued = continues
+                telemetry.lastJolt.accepted = continues || (isCalm(before: tap.time) && isHandHeld(until: tap.time - 0.03, over: 0.5))
+                if !continues, !(isCalm(before: tap.time) && isHandHeld(until: tap.time - 0.03, over: 0.5)) {
+                    // A knock while the case is being handled, or while it lies on a table.
+                    telemetry.knocksIgnored += 1
+                } else {
+                    // Put the cursor back where it was aimed before the jolt, and keep it
+                    // there until the hand has recovered or the gesture has resolved.
+                    playout.rewind(to: tap.time - preTap)
+                    out.snap = playout.settle()
+                    shaper.reset()
+                    if !continues { wander = .zero }
+                    if !wasHolding {
+                        // The rewound samples moved the hand too; all but this one, which the
+                        // hold below accounts for.
+                        for m in recentMotion.dropLast() where m.time > tap.time - preTap {
+                            debt += m.d
+                            wander += m.d
+                        }
+                    }
+                    out.events.append(.tap(strength: tap.strength))
+                    let produced = sequencer.tap(at: tap.time)
+                    if !produced.isEmpty, continues, wander.length > settings.gestureDrift {
+                        // The taps came with the hand going somewhere else. Handling, not clicking.
+                        sequencer.cancel()
+                        telemetry.knocksIgnored += 1
+                        debt = .zero
+                        holdUntil = -.infinity
+                    } else {
+                        out.events += produced
+                        holdUntil = tap.time + (sequencer.isPending ? settings.tapWindow + 0.04 : postTap)
+                    }
+                }
+            }
+            telemetry.tapLevel = detector.level
+        } else {
+            telemetry.tapLevel = 0
+        }
+
+        let holding = s.timestamp <= holdUntil
+        telemetry.holding = holding
+        if holding {
+            debt += motion
+            wander += motion
+            shaper.reset()
+            telemetry.velocity = .zero
+            telemetry.scrolling = false
+            return out
+        }
+
+        // Pay off what a tap left behind before treating motion as pointing.
+        var aim = motion
+        let owed = debt.length
+        if owed > 1e-6 {
+            let direction = debt / owed
+            let back = -(aim.x * direction.x + aim.y * direction.y)
+            if back > 0 {
+                let paid = min(back, owed)
+                aim += direction * paid
+                debt -= direction * paid
+            }
+            debt *= exp(-dt / debtMemory)
+        }
+
+        // Twist to scroll. Engages only when the twist clearly dominates, then owns the motion
+        // until the wrist stops turning.
+        var scrolling = false
+        if settings.twistToScroll {
+            rollSmoothed += (telemetry.roll - rollSmoothed) * lowPassAlpha(cutoffHz: 6, dt: dt)
+            let aim = hypot(telemetry.yaw, telemetry.pitch)
+            if abs(rollSmoothed) > 45, abs(rollSmoothed) > 2 * aim {
+                scrollUntil = s.timestamp + 0.15
+            } else if s.timestamp <= scrollUntil, abs(rollSmoothed) > 12 {
+                scrollUntil = s.timestamp + 0.15
+            }
+            scrolling = s.timestamp <= scrollUntil
+        }
+        telemetry.scrolling = scrolling
+
+        if scrolling {
+            shaper.reset()
+            let excess = max(0, abs(rollSmoothed) - 8) * (rollSmoothed < 0 ? -1 : 1)
+            let direction = settings.reverseScroll ? -1.0 : 1.0
+            // Clockwise twist scrolls down the page.
+            let v = Vec2(0, -excess * settings.scrollGain * direction)
+            scrollPlayout.push(velocity: v, dt: dt, sensorTime: s.timestamp, arrival: s.arrival)
+            playout.push(velocity: .zero, dt: dt, sensorTime: s.timestamp, arrival: s.arrival)
+            telemetry.velocity = .zero
+            return out
+        }
+        if settings.twistToScroll {
+            scrollPlayout.push(velocity: .zero, dt: dt, sensorTime: s.timestamp, arrival: s.arrival)
+        }
+
+        var v = shaper.shape(yaw: aim.x / dt, pitch: aim.y / dt, dt: dt)
+        if settings.invertHorizontal { v.x = -v.x }
+        if settings.invertVertical { v.y = -v.y }
+        telemetry.velocity = v
+        playout.push(velocity: v, dt: dt, sensorTime: s.timestamp, arrival: s.arrival)
+        return out
+    }
+
     // MARK: Telling a tap from a knock
 
     /// Fastest turning speed in the quarter second before `time`, leaving out the last
