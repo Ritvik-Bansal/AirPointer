@@ -124,4 +124,96 @@ final class CursorDriver {
             .post(tap: .cghidEventTap)
     }
 
+    // MARK: Internals
+
+    /// The point to act from, and whether it is this driver's own.
+    private func anchor() -> (point: CGPoint, ours: Bool) {
+        if isRehearsal { return (position ?? .zero, true) }
+        let system = CGEvent(source: nil)?.location ?? position ?? .zero
+        let t = now
+        recent.removeAll { t - $0.at > 0.25 }
+        if let p = position, recent.contains(where: { abs(system.x - $0.point.x) < 1.5 && abs(system.y - $0.point.y) < 1.5 }) {
+            return (p, true)
+        }
+        return (system, false)
+    }
+
+    private func apply(_ d: CGVector) {
+        let base = anchor().point
+        let wanted = CGPoint(x: base.x + d.dx, y: base.y + d.dy)
+        let target = clamp(wanted, from: base)
+        if wanted != target {
+            refused.append((now, CGVector(dx: wanted.x - target.x, dy: wanted.y - target.y)))
+            if refused.count > 32 { refused.removeFirst() }
+        }
+        position = target
+        // Pinned against an edge: nothing to show.
+        guard abs(target.x - base.x) > 0.01 || abs(target.y - base.y) > 0.01 else { return }
+
+        deltaCarry.dx += target.x - base.x
+        deltaCarry.dy += target.y - base.y
+        let dx = deltaCarry.dx.rounded(.towardZero), dy = deltaCarry.dy.rounded(.towardZero)
+        deltaCarry.dx -= dx
+        deltaCarry.dy -= dy
+
+        let type: CGEventType = held.contains(.left) ? .leftMouseDragged
+            : held.contains(.right) ? .rightMouseDragged
+            : held.contains(.middle) ? .otherMouseDragged
+            : .mouseMoved
+        guard let event = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: target, mouseButton: cgButton(held.first ?? .left)) else { return }
+        event.setIntegerValueField(.mouseEventDeltaX, value: Int64(dx))
+        event.setIntegerValueField(.mouseEventDeltaY, value: Int64(dy))
+        event.post(tap: .cghidEventTap)
+        remember(target)
+    }
+
+    private func remember(_ point: CGPoint) {
+        recent.append((now, point))
+        if recent.count > 12 { recent.removeFirst() }
+    }
+
+    private func post(_ button: MouseButton, down: Bool, count: Int) {
+        if isRehearsal { return }
+        let type: CGEventType = switch button {
+        case .left: down ? .leftMouseDown : .leftMouseUp
+        case .right: down ? .rightMouseDown : .rightMouseUp
+        case .middle: down ? .otherMouseDown : .otherMouseUp
+        }
+        // Act from this driver's own position when the cursor is still its own: straight
+        // after a rewind the system has not caught up, and its reading would put the click
+        // back where the jolt threw the cursor.
+        let at = anchor().point
+        guard let event = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: at, mouseButton: cgButton(button)) else { return }
+        event.setIntegerValueField(.mouseEventClickState, value: Int64(max(1, count)))
+        event.post(tap: .cghidEventTap)
+        position = at
+        remember(at)
+    }
+
+    private func cgButton(_ b: MouseButton) -> CGMouseButton {
+        switch b {
+        case .left: .left
+        case .right: .right
+        case .middle: .center
+        }
+    }
+
+    /// Keeps the cursor on a display. Sliding along an edge still works because each axis is
+    /// clamped on its own.
+    private func clamp(_ p: CGPoint, from base: CGPoint) -> CGPoint {
+        let t = now
+        if displays.isEmpty || t - displaysReadAt > 2 {
+            var ids = [CGDirectDisplayID](repeating: 0, count: 16)
+            var count: UInt32 = 0
+            CGGetActiveDisplayList(16, &ids, &count)
+            displays = ids.prefix(Int(count)).map { CGDisplayBounds($0) }
+            displaysReadAt = t
+        }
+        if displays.contains(where: { $0.contains(p) }) { return p }
+        guard let home = displays.first(where: { $0.contains(base) }) ?? displays.first else { return p }
+        return CGPoint(
+            x: min(max(p.x, home.minX), home.maxX - 1),
+            y: min(max(p.y, home.minY), home.maxY - 1)
+        )
+    }
 }
