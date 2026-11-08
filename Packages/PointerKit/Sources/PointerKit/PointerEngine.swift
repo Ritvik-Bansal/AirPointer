@@ -442,4 +442,10 @@ public struct PointerEngine: Sendable {
         (meanSpeed(until: time, over: span) ?? 0) >= settings.restSpeed
     }
 
+    // MARK: Frames
+
+    /// Movement to apply for the display frame at host time `now`.
+    public mutating func frame(now: Double) -> Frame {
+        Frame(move: playout.pull(now: now), scroll: scrollPlayout.pull(now: now))
+    }
 }
