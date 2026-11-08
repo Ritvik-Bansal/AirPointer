@@ -88,5 +88,49 @@ struct CaseGripTests {
         }
     }
 
+    @Test("Aiming left and right moves the cursor left and right, starting to the right")
+    func leftRight() {
+        let r = run("case_lr")
+        #expect(r.extent.x > 5 * r.extent.y)
+        let firstMove = r.path.first { abs($0.x) > 200 }
+        #expect((firstMove?.x ?? 0) > 0)
+    }
+
+    @Test("Tilting up and down moves the cursor up and down, starting upward")
+    func upDown() {
+        let r = run("case_ud")
+        #expect(r.extent.y > 3 * r.extent.x)
+        // The hand was already tilting when the recording began, so most of the first rise
+        // falls inside the stream's settling time; what is left of it must still go up.
+        let firstMove = r.path.first { abs($0.y) > 30 }
+        #expect((firstMove?.y ?? 0) < 0)
+    }
+
+    @Test("The cursor stays where it was aimed through a run of taps")
+    func steadyThroughTaps() {
+        // Ten taps over ten seconds; each one knocks the case by several degrees.
+        let single = run("case_tap1")
+        #expect(single.extent.x < 60 && single.extent.y < 90)
+        let double = run("case_tap2")
+        #expect(double.extent.x < 60 && double.extent.y < 100)
+    }
+
+    @Test("Without tap compensation the same taps throw the cursor far further")
+    func compensationMatters() {
+        var prefs = PointerPreferences()
+        prefs.tapsEnabled = false
+        let raw = run("case_tap1", prefs)
+        let held = run("case_tap1")
+        #expect(raw.travel > 2 * held.travel)
+    }
+
+    @Test("A held-still hand drifts the cursor only slowly")
+    func holdStill() {
+        // Recorded with nothing on screen to correct against, so the hand wanders a few
+        // degrees over the six seconds. The cursor should creep, never dart.
+        let r = run("case_still")
+        #expect(r.extent.x < 80 && r.extent.y < 40)
+        #expect(r.peakSpeed < 900)
+    }
 }
 
