@@ -128,6 +128,53 @@ struct ResponseCurve: View {
     }
 }
 
+/// How hard the last tap landed, against the line it has to cross to count.
+struct TapMeter: View {
+    let runtime: PointerRuntime
+    @State private var hold = PeakHold()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
+                Canvas { context, size in
+                    let live = runtime.snapshot()
+                    let level = hold.update(live.isStreaming ? live.telemetry.tapLevel : 0, now: timeline.date.timeIntervalSinceReferenceDate)
+                    let full = 2.4
+                    let track = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.height / 2)
+                    context.fill(track, with: .color(Theme.hairline))
+                    let w = max(size.height, size.width * min(level / full, 1))
+                    let bar = Path(roundedRect: CGRect(x: 0, y: 0, width: w, height: size.height), cornerRadius: size.height / 2)
+                    context.fill(bar, with: .color(level >= 1 ? Theme.keyline : Theme.inkSoft.opacity(0.55)))
+                    // The line a tap has to cross.
+                    let lineX = size.width / full
+                    context.fill(Path(CGRect(x: lineX - 1, y: -3, width: 2, height: size.height + 6)), with: .color(Theme.ink))
+                }
+                .frame(height: 10)
+                .padding(.vertical, 3)
+            }
+            Text("Tap the case now. A tap counts when the bar crosses the line. If shifting your grip crosses it, move toward Firm.")
+                .fixedSize(horizontal: false, vertical: true)
+                .font(Typo.caption)
+                .foregroundStyle(Theme.inkSoft)
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Tap strength meter")
+    }
+}
+
+/// Holds a peak briefly so a one-sample jolt is visible, then lets it fall.
+final class PeakHold {
+    private var value = 0.0
+    private var last = 0.0
+
+    func update(_ input: Double, now: Double) -> Double {
+        let dt = min(0.1, max(0, now - last))
+        last = now
+        value = max(input, value * exp(-dt / 0.35))
+        return value
+    }
+}
+
 /// The line at the top of a panel that says what the panel is for.
 struct PanelHeading: View {
     let text: String
