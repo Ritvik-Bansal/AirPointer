@@ -307,3 +307,29 @@ At the cursor on every click, in a click-through panel above everything: a 2.5 p
 ### Motion
 Two curves. `quick` (ease-out, 0.18 s) for state changes on a control or a line of text. `settle` (timing curve 0.16, 1, 0.3, 1 over 0.42 s, no bounce) for layout moves: the panel sliding in, the stage moving aside, the tab bar arriving. The lid opens in 0.42 s and shuts in 0.3 s. With Reduce Motion on, slides become fades on the quick curve, the lid snaps, and every ring holds one size and only fades. Motion was not reviewed.
 
+## Do's and Don'ts
+
+### Do:
+- **Do** take every colour from `Theme` and every text style from `Typo`; both appearances come with the token.
+- **Do** use `keyline` for outlines and lit things and `action` for fills and accent text.
+- **Do** make the next step a primary pill, other actions secondary pills, and the least important one quiet; one primary per group.
+- **Do** put new controls in a panel beside the stage, opening with a `title` sentence and separated into groups by a title and a hairline.
+- **Do** use native sliders, switches and segmented pickers at the large size, tinted `action`.
+- **Do** set every changing number in `figure`.
+- **Do** cast shadows with `Theme.shadow(strength)`, soft and straight down.
+- **Do** show the case asleep by a shut lid and an unlit status light, and keep it white in both appearances.
+- **Do** tie every animation to a change of state, on `quick` or `settle`, with a fade in its place under Reduce Motion.
+- **Do** say what is wrong and the physical fix, in the status line or the row's caption.
+
+### Don't:
+- **Don't** build a Settings sidebar of grouped rows, or box groups inside the panel.
+- **Don't** add a second accent hue, or use `warn` for anything the user cannot fix themselves.
+- **Don't** use the `ink` token as a shadow colour.
+- **Don't** add a glow to anything but the live dot screen.
+- **Don't** make anything glossy except the case: no sheen, glass or highlight on pills, panels or the screen.
+- **Don't** dim or tint the case to show a state.
+- **Don't** set text in `keyline` by day.
+- **Don't** let a panel scroll when it could be made to fit; where it must, keep the fade and the chevron.
+- **Don't** add idle or decorative motion, or bounce.
+- **Don't** cover the stage or make anything depend on hover to be understood.
+
