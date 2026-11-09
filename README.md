@@ -77,6 +77,16 @@ Add `--whole` to run the entire recording through one engine, the way the app do
 
 The two recordings the defaults were tuned on are in `Packages/PointerKit/Tests/PointerKitTests/Fixtures`, and the tests assert the results on them. On the case recording, replayed end to end: all 10 single taps and all 6 double-taps click, nothing else does, and the dozen knocks from picking the case up and putting it away are refused.
 
+## What is and is not verified
+
+- Verified on recordings of real use: axis mapping, tap detection, click timing, cursor steadiness through taps, and that handling the case between taps does not click.
+- Known trade-off: on the loose-AirPod recording, 4 of the 6 double-taps register. The other two came while the hand was still turning, and the rule that refuses handling knocks refuses them too. With the case, all of them register.
+- Known limit: one knock on a case held perfectly still is, to the sensors, a tap. It becomes a right-click.
+- Verified by running the app: the interface in light and dark, driven by a replayed recording.
+- Used for real by its author, case in hand, moving the real cursor, with AirPods Pro 3 on macOS 27 (November 2026): reported to work well. That is first use by one person, not a long trial; the speed and steadiness defaults are still a starting point.
+- A guess, not a measurement: which way the *left* AirPod sits when it is the one sending. Every recording so far came from the right one. If up/down feel wrong, teach the grip again.
+- Unknown: how long docked AirPods keep streaming before they sleep on their own. The longest test was about three minutes.
+
 ## Launch arguments for development
 
 ```
