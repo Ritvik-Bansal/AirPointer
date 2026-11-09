@@ -65,6 +65,18 @@ AirPods ──▶ MotionSource ──▶ PointerEngine ──▶ CursorDriver �
 
 `Packages/PointerKit` is the engine: no AppKit, no threads, no clock of its own, so a recording replays to the same result every time. `App/` is everything that touches the system.
 
+## Tuning from a recording
+
+The Signal tab records the raw stream to a text file. Replay it to see what the engine makes of it:
+
+```sh
+scripts/replay.sh "path/to/trace-….trace" --sensitivity 0.6
+```
+
+Add `--whole` to run the entire recording through one engine, the way the app does, and list every jolt with what was made of it.
+
+The two recordings the defaults were tuned on are in `Packages/PointerKit/Tests/PointerKitTests/Fixtures`, and the tests assert the results on them. On the case recording, replayed end to end: all 10 single taps and all 6 double-taps click, nothing else does, and the dozen knocks from picking the case up and putting it away are refused.
+
 ## Launch arguments for development
 
 ```
