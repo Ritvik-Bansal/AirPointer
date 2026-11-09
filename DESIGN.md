@@ -184,3 +184,25 @@ Literal white is used in three places that are objects rather than surfaces: the
 
 **The Outline-Not-Text Rule.** By day the keyline is too light for text. Anything that must be read in the accent uses `action`.
 
+## Typography
+
+**Display Font:** SF Pro Rounded (the system font, `design: .rounded`)
+**Body Font:** SF Pro (the system font, default design)
+**Figure Font:** SF Pro Rounded with monospaced digits
+
+**Character:** Rounded for what the window says about itself, plain for what the user reads and adjusts. On a native Mac app the system face is the platform's own material, and its rounded cut matches the pebble forms. Sizes are fixed points; no line-height or tracking overrides are set, except +2 pt line spacing on the status detail.
+
+### Hierarchy
+- **Display** (bold rounded, 30 pt): the status headline under the case ("Pointing", "Asleep") and the title of each first-run step. One per view.
+- **Title** (bold rounded, 20 pt): the sentence at the top of a panel, group headings inside a panel, the headline of the menu-bar panel.
+- **Pill** (semibold rounded, 15 pt; 13 pt in the small pill): every pill label and the power switch's "On" / "Off".
+- **Heading** (semibold, 14 pt): the title of a control row.
+- **Body** (regular, 14 pt): the status detail (max 380 pt wide, centred), gesture descriptions, figure labels.
+- **Caption** (regular, 12.5 pt, `ink-soft`): the one line under a control saying what it changes, slider end labels, chart axis labels and legends.
+- **Figure** (medium rounded, 13 pt, tabular digits): any number that changes: slider readouts in `action`, signal figures in `ink`, battery, recorded shortcuts.
+
+### Named Rules
+**The Changing-Number Rule.** A number that can change on screen is set in `figure`, so its digits do not shift as it changes.
+
+**The Panel-Says-What-It-Is-For Rule.** A panel opens with a plain sentence in `title` ("How the cursor answers your hand"), not a label and not the tab's name again.
+
