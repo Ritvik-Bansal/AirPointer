@@ -291,3 +291,80 @@ struct ShortcutField: View {
     }
 }
 
+// MARK: Checklist
+
+/// One requirement in Setup: whether it is met, what it is, and the one thing to do about it.
+struct CheckRow<Action: View>: View {
+    enum State {
+        case done, waiting, needed
+    }
+
+    let state: State
+    let title: String
+    let detail: Text
+    @ViewBuilder var action: () -> Action
+
+    init(state: State, title: String, detail: Text, @ViewBuilder action: @escaping () -> Action) {
+        self.state = state
+        self.title = title
+        self.detail = detail
+        self.action = action
+    }
+
+    init(state: State, title: String, detail: String, @ViewBuilder action: @escaping () -> Action) {
+        self.init(state: state, title: title, detail: Text(detail), action: action)
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(tint)
+                .frame(width: 24, height: 30)
+                .accessibilityLabel(label)
+            VStack(alignment: .leading, spacing: 2) {
+                // The action sits on the title's line; the explanation gets the full width under both.
+                HStack(spacing: 8) {
+                    Text(title).font(Typo.heading).foregroundStyle(Theme.ink)
+                    Spacer(minLength: 8)
+                    action()
+                }
+                .frame(minHeight: 30)
+                detail
+                    .font(Typo.caption)
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var symbol: String {
+        switch state {
+        case .done: "checkmark.circle.fill"
+        case .waiting: "circle.dashed"
+        case .needed: "exclamationmark.circle.fill"
+        }
+    }
+
+    private var tint: Color {
+        switch state {
+        case .done: Theme.action
+        case .waiting: Theme.inkSoft
+        case .needed: Theme.warn
+        }
+    }
+
+    private var label: String {
+        switch state {
+        case .done: "Done"
+        case .waiting: "Waiting"
+        case .needed: "Needs attention"
+        }
+    }
+}
+
+extension CheckRow where Action == EmptyView {
+    init(state: State, title: String, detail: String) {
+        self.init(state: state, title: title, detail: Text(detail)) { EmptyView() }
+    }
+}
