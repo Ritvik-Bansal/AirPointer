@@ -380,6 +380,63 @@ struct SetupPanel: View {
     }
 }
 
+/// Six seconds of the stream: turning rates as two lines, tap strength as spikes from the floor.
+struct SignalChart: View {
+    let runtime: PointerRuntime
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30)) { _ in
+            Canvas { context, size in
+                let points = runtime.snapshot().history
+                let mid = size.height * 0.42
+                let scale = (mid - 4) / 160  // ±160 deg/s fills the upper band
+
+                var axis = Path()
+                axis.move(to: CGPoint(x: 0, y: mid))
+                axis.addLine(to: CGPoint(x: size.width, y: mid))
+                context.stroke(axis, with: .color(Theme.hairline), lineWidth: 1)
+
+                // The line a tap must cross, measured up from the floor.
+                let floor = size.height - 1
+                let tapUnit = size.height * 0.22
+                var bar = Path()
+                bar.move(to: CGPoint(x: 0, y: floor - tapUnit))
+                bar.addLine(to: CGPoint(x: size.width, y: floor - tapUnit))
+                context.stroke(bar, with: .color(Theme.inkSoft.opacity(0.7)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+
+                guard points.count > 1 else { return }
+                let step = size.width / 299
+                let offset = Double(300 - points.count) * step
+
+                func line(_ value: (SignalPoint) -> Float) -> Path {
+                    var path = Path()
+                    for (i, p) in points.enumerated() {
+                        let y = mid - Double(max(-160, min(160, value(p)))) * scale
+                        let point = CGPoint(x: offset + Double(i) * step, y: y)
+                        if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
+                    }
+                    return path
+                }
+                context.stroke(line { $0.pitch }, with: .color(Theme.ink.opacity(0.75)), style: StrokeStyle(lineWidth: 1.5, lineJoin: .round))
+                context.stroke(line { $0.yaw }, with: .color(Theme.keyline), style: StrokeStyle(lineWidth: 2, lineJoin: .round))
+
+                var taps = Path()
+                for (i, p) in points.enumerated() where p.tapLevel > 0.25 {
+                    let x = offset + Double(i) * step
+                    taps.move(to: CGPoint(x: x, y: floor))
+                    taps.addLine(to: CGPoint(x: x, y: floor - Double(min(p.tapLevel, 2.6)) * tapUnit))
+                }
+                context.stroke(taps, with: .color(Theme.inkSoft), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.stage))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .accessibilityElement()
+        .accessibilityLabel("Live chart of the motion stream")
+    }
+}
+
 /// The line at the top of a panel that says what the panel is for.
 struct PanelHeading: View {
     let text: String
