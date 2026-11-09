@@ -36,6 +36,85 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         build()
     }
 
+    // MARK: State
+
+    func setAwake(_ on: Bool, animated: Bool = true) {
+        guard awake != on else { return }
+        let animate = animated && awake != nil && !reduceMotion
+        awake = on
+        // The status light on the front: lit in the keyline colour while awake. The colour is
+        // given once, as light it gives off; given as its surface colour too, the two add up
+        // and it renders as a paler, greener blue than the keyline.
+        led.emission.contents = on ? NSColor(Theme.keyline) : NSColor.black
+        led.diffuse.contents = on ? NSColor.black : NSColor(white: 0.5, alpha: 1)
+        let angle = on ? openAngle : 0
+        lidPivot.removeAllActions()
+        if animate {
+            let turn = SCNAction.rotateTo(x: angle, y: 0, z: 0, duration: on ? 0.42 : 0.3, usesShortestUnitArc: true)
+            turn.timingMode = .easeOut
+            lidPivot.runAction(turn)
+        } else {
+            lidPivot.eulerAngles.x = angle
+        }
+    }
+
+    func setDark(_ on: Bool) {
+        guard dark != on else { return }
+        dark = on
+        // The case is white in any light; at night the room around it dims.
+        scene.lightingEnvironment.contents = CaseScene.environment(dark: on)
+        // In daylight the white case sits on a near-white stage, so it is lit to keep its
+        // shading rather than to look as bright as possible.
+        scene.lightingEnvironment.intensity = on ? 0.55 : 0.5
+        keyLight.light?.intensity = on ? 700 : 470
+        fillLight.light?.intensity = on ? 260 : 150
+    }
+
+    /// Sets the lid by hand, from 0 (shut) to 1 (fully open), and the status light with it.
+    /// For renders made one frame at a time, where nothing runs on a clock.
+    func poseLid(openness: Double) {
+        let open = min(max(openness, 0), 1)
+        lidPivot.removeAllActions()
+        lidPivot.eulerAngles.x = openAngle * open
+        let on = open > 0.5
+        awake = on
+        led.emission.contents = on ? NSColor(Theme.keyline) : NSColor.black
+        led.diffuse.contents = on ? NSColor.black : NSColor(white: 0.5, alpha: 1)
+    }
+
+    /// Sets the tap ring by hand: nil hides it, 0…1 is how far it has spread.
+    func poseRing(progress: Double?) {
+        ring.removeAllActions()
+        guard let progress, progress >= 0, progress < 1 else {
+            ring.opacity = 0
+            return
+        }
+        let size = 0.8 + 0.36 * (1 - pow(1 - progress, 3))
+        ring.scale = SCNVector3(size, 1, size * ringSquash)
+        ring.opacity = 0.95 * (1 - progress * progress)
+    }
+
+    /// Where a point on the case lands in a picture of the given size, origin top-left.
+    /// Used to draw labels that point at parts of the case.
+    func pictured(_ point: SIMD3<Float>, in viewport: CGSize) -> CGPoint {
+        guard let lens = camera.camera else { return .zero }
+        let world = aim.simdWorldTransform * SIMD4<Float>(point.x, point.y, point.z, 1)
+        let view = camera.simdWorldTransform.inverse * world
+        let clip = simd_float4x4(lens.projectionTransform(withViewportSize: viewport)) * view
+        guard clip.w != 0 else { return .zero }
+        let x = (CGFloat(clip.x / clip.w) + 1) / 2 * viewport.width
+        let y = (1 - CGFloat(clip.y / clip.w)) / 2 * viewport.height
+        return CGPoint(x: x, y: y)
+    }
+
+    /// Sets the pose directly. Used for still renders.
+    func pose(yaw: Double, pitch: Double, roll: Double) {
+        self.yaw = yaw
+        self.pitch = pitch
+        self.roll = roll
+        applyPose()
+    }
+
     // MARK: Construction
 
     private func build() {
