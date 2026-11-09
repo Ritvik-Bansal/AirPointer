@@ -255,3 +255,22 @@ Rounded pebble forms throughout. Buttons and the power switch are capsules. The 
 
 Outlines are thin and in the keyline: 1.5 pt on a secondary pill (2.5 pt on hover), 1 pt at 70% on the panel, 1.5 pt on the live screen (1 pt `hairline` when not live). Stroked chart lines have round caps and joins.
 
+## Components
+
+### Buttons
+The world's button is a pill: generous, outlined, labelled with a verb.
+- **Shape:** capsule. Three sizes: small (30 pt high, 14 pt side padding, 13 pt label), regular (38, 20, 15 pt), large (48, 28, 15 pt).
+- **Primary:** `action` fill, `on-action` label. The one thing to do next in its group, and the selected tab.
+- **Secondary:** `panel` fill, 1.5 pt keyline outline, `action` label. Everything else that acts.
+- **Quiet:** label only, in `ink-soft`. The least important action in a group ("Cancel", "Skip setup", "Quit").
+- **Hover:** primary brightens 7% and its shadow deepens; secondary gains a 16% keyline wash and a 2.5 pt outline; quiet turns `ink` on a 60% hairline capsule. A large pill also grows to 103.5%, except under Reduce Motion.
+- **Pressed:** scales to 97%; primary darkens 6%; secondary's wash rises to 24%.
+- **Disabled:** 45% opacity.
+- All state changes ease out over 0.18 s.
+
+### Power switch
+A wide capsule (32 pt high) that says which way it is set: "On" in `on-action` on an `action` fill with the white 24 pt thumb at the right, or the thumb at the left and "Off" in `ink-soft` on a `hairline` track with a faint outline. It is exposed to assistive technology as a toggle. The Off appearance is from source; it was not captured.
+
+### Navigation (tab bar)
+Four large pills: Feel, Taps, Setup, Signal. Unselected is secondary, selected is primary; selecting the open one closes it. The Setup pill carries a 9 pt `warn` dot at its top-right corner while something only the user can fix is in the way.
+
