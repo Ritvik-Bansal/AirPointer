@@ -289,3 +289,6 @@ The one container. `panel` fill, 22 pt continuous corners, 1 pt keyline outline 
 ### Tap dots
 One, two or three 9 pt keyline dots, 5 pt apart: the picture of a tap count, used wherever a gesture is named. The same dot vocabulary marks first-run progress (7 pt, the current step 10 pt, lit up to the current step).
 
+### Dot screen (signature)
+A miniature of the Mac's main display in its real aspect ratio: 40 by 26 dots on a `panel` face with 14 pt padding and 20 pt corners. The dot under the real cursor is lit in the keyline with a soft falloff to its neighbours; it leaves a trail that fades over 0.42 s; each tap sends out a ring of lit dots that spreads and thins over 0.6 s. While the pointer is live the screen has a 1.5 pt keyline outline and the Screen glow. When it is not, the outline is a hairline, the glow is gone and the cursor is marked only by the nearest dots, enlarged, in `ink-soft`.
+
