@@ -226,3 +226,32 @@ Rhythm inside a panel: 14 to 16 pt between control rows, 4 to 5 pt inside a row 
 
 **The Arm's-Length Rule.** Anything clicked often is large: tab pills are 48 pt high with a 92 pt minimum label, native sliders and segmented pickers use the large control size, and nothing needs a hover to be understood.
 
+## Elevation & Depth
+
+Depth is the room, not a stack of cards. The wall-and-floor ground gives the scene a horizon; the case stands on the floor with a soft contact shadow; the screen and the panel sit slightly off the wall with one soft ambient shadow each. Pills carry a small shadow that deepens on hover. All shadows are low, soft and straight down.
+
+Every shadow colour comes from `Theme.shadow(strength)`: the ink hue at the given alpha by day, and near-black at 4.5 times the strength at night, where a pale shadow would read as a glow.
+
+### Shadow Vocabulary
+SwiftUI terms: `.shadow(color: Theme.shadow(s), radius:, y:)`.
+- **Panel** (`s 0.10, radius 16, y 8`): the settings panel.
+- **Screen** (`s 0.10, radius 12, y 6`): the dot screen.
+- **Screen glow** (`Theme.keyline` at 32%, `radius 14`, no offset): around the dot screen, only while the pointer is live.
+- **Secondary pill** (`s 0.06, radius 2, y 1`; hover `s 0.12, radius 6, y 3`).
+- **Primary pill** (`s 0.16, radius 4, y 2`; hover `radius 7, y 3`).
+- **Switch thumb** (`s 0.2, radius 1.5, y 1`).
+- **Contact shadow** (a 166 by 19 pt ellipse filled with `Theme.shadow(0.22)`, blurred 10 pt): under the case, on the floor.
+
+### Named Rules
+**The Dark-Shadow Rule.** A shadow is never the `ink` token, which turns pale at night. Use `Theme.shadow(strength)`, which is dark in both appearances.
+
+**The One-Glow Rule.** The only glow around a surface is the dot screen's: keyline-coloured, and present only while the pointer is live. Lit dots, the case's status light and the tap rings are lit marks, not glows; no other surface gets a coloured halo.
+
+**The One-Glossy-Object Rule.** Nothing drawn by the app is glossy except the case. No sheen, glass or specular highlight on pills, panels or the screen. Native controls keep whatever material the system gives them.
+
+## Shapes
+
+Rounded pebble forms throughout. Buttons and the power switch are capsules. The panel is a continuous-corner rectangle at 22 pt; the dot screen is the same form at 20 pt. Dots are circles: 1.5 pt radius unlit on the screen, swelling to 3.5 pt at full brightness, 9 pt across in tap counts, 7 and 10 pt in setup progress. Meter tracks and legend swatches are capsules. There are no square corners and no boxes inside the panel.
+
+Outlines are thin and in the keyline: 1.5 pt on a secondary pill (2.5 pt on hover), 1 pt at 70% on the panel, 1.5 pt on the live screen (1 pt `hairline` when not live). Stroked chart lines have round caps and joins.
+
