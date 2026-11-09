@@ -2,6 +2,61 @@ import SceneKit
 import SwiftUI
 import simd
 
+/// The AirPods case, in 3D, turning as the real one turns.
+///
+/// Shown the way a mirror would show it: facing you, lid open behind the two AirPods
+/// docked inside, and turning to your right when you turn yours to the right. The lid
+/// shuts when the AirPods go to sleep.
+struct CaseView: NSViewRepresentable {
+    let runtime: PointerRuntime
+    var isAwake: Bool
+
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeCoordinator() -> CaseScene { CaseScene(runtime: runtime) }
+
+    func makeNSView(context: Context) -> SCNView {
+        let view = SCNView(frame: .zero)
+        view.scene = context.coordinator.scene
+        view.pointOfView = context.coordinator.camera
+        view.backgroundColor = .clear
+        view.antialiasingMode = .multisampling4X
+        view.preferredFramesPerSecond = 60
+        view.rendersContinuously = false
+        view.allowsCameraControl = false
+        view.delegate = context.coordinator
+        view.isPlaying = true
+        view.setAccessibilityElement(true)
+        view.setAccessibilityRole(.image)
+        view.setAccessibilityLabel("Your AirPods case with both AirPods docked, mirroring how you hold it")
+        return view
+    }
+
+    func updateNSView(_ view: SCNView, context: Context) {
+        context.coordinator.reduceMotion = reduceMotion
+        context.coordinator.setAwake(isAwake)
+        // Only a live stream needs a frame every refresh. Asleep, the lid shuts and then
+        // nothing moves, so the scene stops drawing altogether until it wakes.
+        let scene = context.coordinator
+        if isAwake {
+            view.isPlaying = true
+            view.rendersContinuously = true
+        } else {
+            view.rendersContinuously = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak view] in
+                if !scene.isAwake { view?.isPlaying = false }
+            }
+        }
+        context.coordinator.setDark(scheme == .dark)
+    }
+
+    static func dismantleNSView(_ view: SCNView, coordinator: CaseScene) {
+        view.isPlaying = false
+        view.delegate = nil
+    }
+}
+
 /// Builds the case and keeps it in step with the motion stream.
 final class CaseScene: NSObject, SCNSceneRendererDelegate {
     let scene = SCNScene()
