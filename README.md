@@ -42,6 +42,29 @@ Build products go to `~/Library/Caches/AirPointer`, not into this folder.
 
 The app is signed with the local Apple Development certificate. macOS ties the two permissions to that signature, so they survive rebuilds.
 
+## How it works
+
+The AirPods send motion at 50 samples a second from one earbud. The case itself sends nothing; its sensors are not readable from a Mac.
+
+```
+AirPods ──▶ MotionSource ──▶ PointerEngine ──▶ CursorDriver ──▶ the real cursor
+                              │
+                              ├─ AxisMapper    which way is left/right and up/down for this grip
+                              ├─ RateShaper    steadies small motion, speeds up flicks
+                              ├─ TapDetector   finds finger taps as one-sample jolts
+                              ├─ TapSequencer  turns taps into clicks
+                              └─ Playout       turns bursty samples into smooth frames
+```
+
+- **Direction comes from gravity plus one calibration.** Turning about "up" is left/right. A single tilt-up gesture teaches which way the case points, which fixes up/down. No compass is involved, so nothing drifts.
+- **Samples arrive in bursts** (two together, then a gap of up to 90 ms). The cursor follows a running target and is dead-reckoned through the gaps, so it stays smooth.
+- **A tap knocks the case several degrees.** When one is found, the cursor is put back where it was aimed and held there until the hand recovers. The click lands where you were pointing, not where the tap threw it.
+- **A knock is not a tap.** A jolt only starts a gesture if the hand had stopped first and the case is actually being held (a hand always trembles a little; a case on a table does not). Picking the case up, re-gripping it and putting it down all produce jolts, and they are refused. The Signal tab's chart shows every jolt either way.
+- **The pointer waits about a second after the AirPods wake** before going live, long enough to notice if they are going into ears rather than sitting in the case. If they look worn, it pauses and says so.
+- **The app opts out of App Nap while motion is arriving.** A menu-bar app with no window is otherwise throttled, and the cursor would stall.
+
+`Packages/PointerKit` is the engine: no AppKit, no threads, no clock of its own, so a recording replays to the same result every time. `App/` is everything that touches the system.
+
 ## Launch arguments for development
 
 ```
