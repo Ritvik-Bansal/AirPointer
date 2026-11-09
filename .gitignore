@@ -5,3 +5,6 @@ DerivedData/
 .build/
 .swiftpm/
 xcuserdata/
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/questions/
