@@ -280,6 +280,106 @@ final class PeakHold {
     }
 }
 
+// MARK: Setup
+
+/// What has to be true for the pointer to work, and the one fix for each.
+struct SetupPanel: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        VStack(alignment: .leading, spacing: 16) {
+            PanelHeading("Getting it ready")
+
+            VStack(alignment: .leading, spacing: 16) {
+                CheckRow(
+                    state: model.motionAccess == .allowed ? .done : .needed,
+                    title: "Read the AirPods' motion",
+                    detail: model.motionAccess == .denied
+                        ? "Switched off in Privacy & Security, under Motion & Fitness."
+                        : model.motionAccess == .allowed ? "Allowed." : "macOS will ask once."
+                ) {
+                    if model.motionAccess == .denied {
+                        Button("Open Settings") { Permissions.open(.motion) }.buttonStyle(.pill(size: .small))
+                    } else if model.motionAccess == .undetermined {
+                        Button("Allow…") { model.requestMotionAccess() }.buttonStyle(.pill(.primary, size: .small))
+                    }
+                }
+
+                CheckRow(
+                    state: model.canControlPointer ? .done : .needed,
+                    title: "Move the pointer and click",
+                    detail: model.canControlPointer ? "Allowed." : "Switch AirPointer on in Privacy & Security, under Accessibility."
+                ) {
+                    if !model.canControlPointer {
+                        Button("Allow…") { model.requestPointerAccess() }.buttonStyle(.pill(.primary, size: .small))
+                    }
+                }
+
+                CheckRow(
+                    state: model.hasEverStreamed ? .done : model.isConnectedButSilent ? .needed : .waiting,
+                    title: "Automatic Ear Detection off",
+                    detail: model.hasEverStreamed
+                        ? Text("Motion is arriving, so it is off.")
+                        : Text("In Bluetooth settings, click \(Image(systemName: "info.circle")) beside your AirPods and turn it off. Sound will no longer pause when an AirPod leaves your ear.")
+                ) {
+                    if !model.hasEverStreamed {
+                        Button("Open Bluetooth") { Permissions.open(.bluetooth) }.buttonStyle(.pill(size: .small))
+                    }
+                }
+
+                CheckRow(
+                    state: model.isStreaming ? .done : .waiting,
+                    title: "Case open, AirPods inside",
+                    detail: model.isStreaming ? "Awake. Close the lid to put it to sleep." : "Open the lid to wake the pointer. It sleeps a few seconds after the lid shuts."
+                )
+
+                CheckRow(
+                    state: !model.isCalibrating && model.calibration.isCalibrated(for: model.sensor) ? .done : .waiting,
+                    title: "Your grip",
+                    detail: model.isCalibrating
+                        ? "Follow the prompt under the case."
+                        : model.calibration.isCalibrated(for: model.sensor)
+                            ? "Learned. Teach it again if up and down ever feel crooked."
+                            : "Using a typical grip. Teach it yours for truer up and down."
+                ) {
+                    if model.isCalibrating {
+                        Button("Cancel") { model.cancelCalibration() }.buttonStyle(.pill(.quiet, size: .small))
+                    } else {
+                        Button(model.calibration.isCalibrated(for: model.sensor) ? "Teach again" : "Teach it") { model.beginCalibration() }
+                            .buttonStyle(.pill(model.calibration.isCalibrated(for: model.sensor) ? .secondary : .primary, size: .small))
+                            .disabled(!model.isStreaming)
+                    }
+                }
+            }
+
+            GroupHeading(text: "Options")
+
+            SettingToggle(
+                title: "Open at login",
+                detail: model.loginItemProblem,
+                isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) })
+            )
+            SettingToggle(
+                title: "Keep sound on this Mac while pointing",
+                detail: "With ear detection off, macOS sends sound to the AirPods even while they sit in the case. This moves it back to the speakers and microphone you were using.",
+                isOn: $model.keepSoundOnMac
+            )
+            SettingToggle(
+                title: "Ring at the cursor on every click",
+                detail: "A tap makes no click you can feel, so the ring is how you know it landed.",
+                isOn: $model.showClickRings
+            )
+            SettingToggle(title: "Reverse left and right", isOn: $model.prefs.invertHorizontal)
+            SettingToggle(title: "Reverse up and down", isOn: $model.prefs.invertVertical)
+
+            GroupHeading(text: "Shortcuts")
+            ShortcutField(title: "Turn the pointer on or off", shortcut: $model.toggleShortcut)
+            ShortcutField(title: "Teach your grip", shortcut: $model.calibrateShortcut)
+        }
+    }
+}
+
 /// The line at the top of a panel that says what the panel is for.
 struct PanelHeading: View {
     let text: String
