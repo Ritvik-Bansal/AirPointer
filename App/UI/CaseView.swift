@@ -115,6 +115,64 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         applyPose()
     }
 
+    // MARK: Frame
+
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        guard let runtime else { return }
+        let dt = min(0.05, max(0, time - (lastTime ?? time)))
+        lastTime = time
+        let live = runtime.snapshot()
+
+        if live.isStreaming {
+            // Pitch is read from gravity, so it is the true tilt. Yaw and roll have no fixed
+            // reference, so they follow the motion and ease back to centre.
+            yaw += live.telemetry.yaw * dt
+            roll += live.telemetry.roll * dt
+            pitch += (live.telemetry.elevation - pitch) * (1 - exp(-dt / 0.05))
+        } else {
+            pitch *= exp(-dt / 0.3)
+        }
+        let ease = exp(-dt / 2.2)
+        yaw = min(max(yaw * ease, -55), 55)
+        roll = min(max(roll * ease, -75), 75)
+        applyPose()
+
+        if let last = lastTapCount, live.tapCount != last { pulse(strength: live.lastTapStrength) }
+        lastTapCount = live.tapCount
+    }
+
+    private func applyPose() {
+        let p = min(max(pitch, -45), 55)
+        // A mirror image: aim right and the front swings to the right of the screen; aim up
+        // and the front tips up; twist clockwise and the top leans right.
+        let turn = simd_quatf(angle: Float(yaw * .pi / 180), axis: [0, 1, 0])
+        let tilt = simd_quatf(angle: Float(-p * .pi / 180), axis: [1, 0, 0])
+        let twist = simd_quatf(angle: Float(-roll * .pi / 180), axis: [0, 0, 1])
+        aim.simdOrientation = turn * tilt * twist
+    }
+
+    /// A ring spreading out from behind the case, where the finger landed.
+    private func pulse(strength: Double) {
+        ring.removeAllActions()
+        ring.opacity = 0.95
+        guard !reduceMotion else {
+            ring.scale = SCNVector3(1.08, 1, 1.08 * ringSquash)
+            ring.runAction(.fadeOut(duration: 0.4))
+            return
+        }
+        // Wider than it is tall, like the case, so it spreads sideways and stays clear of
+        // the screen above.
+        ring.scale = SCNVector3(0.8, 1, 0.8 * ringSquash)
+        let grow = SCNAction.customAction(duration: 0.5) { [ringSquash] node, elapsed in
+            let t = 1 - pow(1 - Double(elapsed) / 0.5, 3)
+            let s = 0.8 + 0.36 * t
+            node.scale = SCNVector3(s, 1, s * ringSquash)
+        }
+        let fade = SCNAction.fadeOut(duration: 0.5)
+        fade.timingMode = .easeIn
+        ring.runAction(.group([grow, fade]))
+    }
+
     // MARK: Construction
 
     private func build() {
