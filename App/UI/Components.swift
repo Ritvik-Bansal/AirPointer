@@ -140,3 +140,79 @@ struct PowerSwitchStyle: ToggleStyle {
     }
 }
 
+// MARK: Rows
+
+/// A labelled slider with its value read out and one line saying what it changes.
+struct SettingSlider: View {
+    let title: String
+    let detail: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    var low = ""
+    var high = ""
+    let readout: (Double) -> String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title).font(Typo.heading).foregroundStyle(Theme.ink)
+                Spacer()
+                Text(readout(value)).font(Typo.figure).foregroundStyle(Theme.action)
+            }
+            Slider(value: $value, in: range) {
+                Text(title)
+            } minimumValueLabel: {
+                Text(low).font(Typo.caption).foregroundStyle(Theme.inkSoft).frame(width: 46, alignment: .leading)
+            } maximumValueLabel: {
+                Text(high).font(Typo.caption).foregroundStyle(Theme.inkSoft).frame(width: 46, alignment: .trailing)
+            }
+            .labelsHidden()
+            .controlSize(.large)
+            .tint(Theme.action)
+            if !detail.isEmpty {
+                Text(detail)
+                    .font(Typo.caption)
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// A switch with a title and, when it helps, a line of explanation.
+struct SettingToggle: View {
+    let title: String
+    var detail: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Typo.heading).foregroundStyle(Theme.ink)
+                if let detail {
+                    Text(detail)
+                        .font(Typo.caption)
+                        .foregroundStyle(Theme.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .toggleStyle(.switch)
+        .tint(Theme.action)
+    }
+}
+
+/// A heading inside a panel, with a rule beneath to separate groups without boxing them.
+struct GroupHeading: View {
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(text).font(Typo.title).foregroundStyle(Theme.ink)
+            Rectangle().fill(Theme.hairline).frame(height: 1)
+        }
+        .padding(.top, 10)
+    }
+}
+
