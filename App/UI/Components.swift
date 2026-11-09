@@ -107,3 +107,36 @@ extension ButtonStyle where Self == PillButtonStyle {
     }
 }
 
+/// The master switch: a wide capsule that says which way it is set.
+struct PowerSwitchStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            configuration.isOn.toggle()
+        } label: {
+            HStack(spacing: 8) {
+                if configuration.isOn {
+                    Text("On").foregroundStyle(Theme.onAction).padding(.leading, 14)
+                }
+                Circle()
+                    .fill(.white)
+                    .frame(width: 24, height: 24)
+                    .shadow(color: Theme.shadow(0.2), radius: 1.5, y: 1)
+                if !configuration.isOn {
+                    Text("Off").foregroundStyle(Theme.inkSoft).padding(.trailing, 14)
+                }
+            }
+            .font(Typo.pill)
+            .padding(4)
+            .frame(height: 32)
+            .background(
+                Capsule().fill(configuration.isOn ? Theme.action : Theme.hairline)
+            )
+            .overlay(Capsule().strokeBorder(configuration.isOn ? Color.clear : Theme.inkSoft.opacity(0.25), lineWidth: 1))
+            .contentShape(Capsule())
+            .animation(Theme.quick, value: configuration.isOn)
+        }
+        .buttonStyle(.plain)
+        .accessibilityRepresentation { Toggle(isOn: configuration.$isOn) { configuration.label } }
+    }
+}
+
