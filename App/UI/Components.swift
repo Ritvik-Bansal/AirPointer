@@ -216,3 +216,23 @@ struct GroupHeading: View {
     }
 }
 
+// MARK: Tap glyphs
+
+/// One, two or three dots: the picture of a tap count, used wherever a gesture is named.
+struct TapDots: View {
+    let count: Int
+    var lit = true
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<count, id: \.self) { _ in
+                Circle()
+                    .fill(lit ? Theme.keyline : Theme.dotOff)
+                    .frame(width: 9, height: 9)
+            }
+        }
+        .frame(width: 44, alignment: .leading)
+        .accessibilityHidden(true)
+    }
+}
+
