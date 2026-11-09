@@ -236,3 +236,58 @@ struct TapDots: View {
     }
 }
 
+// MARK: Shortcut field
+
+/// Shows a global shortcut and records a new one when clicked.
+struct ShortcutField: View {
+    let title: String
+    @Binding var shortcut: Shortcut?
+    @State private var recording = false
+    @State private var monitor: Any?
+
+    var body: some View {
+        HStack {
+            Text(title).font(Typo.heading).foregroundStyle(Theme.ink)
+            Spacer()
+            if shortcut != nil, !recording {
+                Button("Clear") { shortcut = nil }
+                    .buttonStyle(.pill(.quiet, size: .small))
+            }
+            Button {
+                recording ? stop() : start()
+            } label: {
+                Text(recording ? "Press keys…" : shortcut?.display ?? "None")
+                    .font(Typo.figure)
+                    .frame(minWidth: 76)
+            }
+            .buttonStyle(.pill(recording ? .primary : .secondary, size: .small))
+            .accessibilityLabel("\(title) shortcut")
+            .accessibilityValue(shortcut?.display ?? "None")
+        }
+        .onDisappear(perform: stop)
+    }
+
+    private func start() {
+        recording = true
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // Escape cancels
+                stop()
+                return nil
+            }
+            if let recorded = Shortcut(event: event) {
+                shortcut = recorded
+                stop()
+            } else {
+                NSSound.beep()
+            }
+            return nil
+        }
+    }
+
+    private func stop() {
+        recording = false
+        if let monitor { NSEvent.removeMonitor(monitor) }
+        monitor = nil
+    }
+}
+
