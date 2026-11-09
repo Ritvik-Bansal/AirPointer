@@ -17,6 +17,95 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 }
 
+/// The window: a stage, and along the bottom four pills that each open a panel beside it.
+///
+/// With nothing open the stage stands alone in the middle, which is the whole idea in one
+/// picture. Opening a panel slides the stage left; closing it lets the stage back.
+struct MainWindow: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("openTab") private var storedTab = ""
+    @State private var tab: Tab?
+
+    private let panelWidth: CGFloat = 448
+
+    var body: some View {
+        VStack(spacing: 0) {
+            TopBar()
+
+            HStack(spacing: 0) {
+                // Any spare height goes under the status line, so its button never crowds the pills.
+                StageView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                if !model.hasFinishedSetup {
+                    PanelShell {
+                        OnboardingPanel()
+                    } footer: {
+                        Button("Skip setup") { model.hasFinishedSetup = true }
+                            .buttonStyle(.pill(.quiet, size: .small))
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 14)
+                    }
+                    .frame(width: panelWidth)
+                    .transition(panelTransition)
+                } else if let tab {
+                    PanelShell {
+                        switch tab {
+                        case .feel: FeelPanel()
+                        case .taps: TapsPanel()
+                        case .setup: SetupPanel()
+                        case .signal: SignalPanel()
+                        }
+                    }
+                    .id(tab)
+                    .frame(width: panelWidth)
+                    .transition(panelTransition)
+                }
+            }
+            .frame(maxHeight: .infinity)
+
+            if model.hasFinishedSetup {
+                TabBar(selection: $tab, needsAttention: needsAttention)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        // The top bar shares its row with the window's own buttons, so the content runs up
+        // under the title bar. The room is the window's own background and fills all of it.
+        .ignoresSafeArea(.container, edges: .top)
+        .frame(width: 880, height: 640)
+        .containerBackground(for: .window) { StageBackground() }
+        .animation(reduceMotion ? Theme.quick : Theme.settle, value: tab)
+        .animation(reduceMotion ? Theme.quick : Theme.settle, value: model.hasFinishedSetup)
+        .onAppear {
+            tab = Tab(rawValue: storedTab)
+            model.windowVisible = true
+            // While its window is open the app behaves like any other: in the Dock, in the
+            // app switcher. Closed, it goes back to being only a menu-bar icon.
+            if !Rehearsal.staysInBackground {
+                NSApp.setActivationPolicy(.regular)
+                NSApp.activate()
+            }
+        }
+        .onDisappear {
+            model.windowVisible = false
+            NSApp.setActivationPolicy(.accessory)
+        }
+        .onChange(of: tab) { _, new in storedTab = new?.rawValue ?? "" }
+    }
+
+    /// Panels slide in from the right; with Reduce Motion on they fade in place.
+    private var panelTransition: AnyTransition {
+        reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity)
+    }
+
+    /// Setup wants a look when something only the user can fix is in the way.
+    private var needsAttention: Bool {
+        model.status == .motionDenied || model.status == .needsPointerAccess || model.isConnectedButSilent
+    }
+}
+
 /// The strip under the title bar: the name on the left, the master switch on the right.
 private struct TopBar: View {
     @Environment(AppModel.self) private var model
