@@ -17,6 +17,62 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 }
 
+/// The white panel that holds a tab's controls. Outlined in the keyline like the pills.
+/// When there is more than fits, the bottom edge fades and a chevron says so.
+private struct PanelShell<Content: View, Footer: View>: View {
+    @ViewBuilder var content: () -> Content
+    @ViewBuilder var footer: () -> Footer
+    @State private var hasMoreBelow = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                content()
+                    .padding(22)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.containerSize.height < geometry.contentSize.height - 6
+            } action: { _, more in
+                hasMoreBelow = more
+            }
+            .overlay(alignment: .bottom) {
+                ZStack(alignment: .bottom) {
+                    LinearGradient(colors: [Theme.panel.opacity(0), Theme.panel], startPoint: .top, endPoint: .bottom)
+                        .frame(height: 56)
+                    Image(systemName: "chevron.compact.down")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Theme.action)
+                        .padding(.bottom, 5)
+                        .accessibilityHidden(true)
+                }
+                .opacity(hasMoreBelow ? 1 : 0)
+                .animation(Theme.quick, value: hasMoreBelow)
+                .allowsHitTesting(false)
+            }
+            footer()
+        }
+        .background(
+            RoundedRectangle(cornerRadius: Theme.panelRadius, style: .continuous)
+                .fill(Theme.panel)
+                .shadow(color: Theme.shadow(0.10), radius: 16, y: 8)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Theme.panelRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.panelRadius, style: .continuous)
+                .strokeBorder(Theme.keyline.opacity(0.7), lineWidth: 1)
+        )
+        .padding(.trailing, 18)
+        .padding(.bottom, 8)
+    }
+}
+
+extension PanelShell where Footer == EmptyView {
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.init(content: content) { EmptyView() }
+    }
+}
+
 /// Four large pills. Large because they are often clicked with the case itself.
 private struct TabBar: View {
     @Binding var selection: Tab?
