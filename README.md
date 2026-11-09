@@ -28,6 +28,20 @@ Tap the back or a side. Two taps on the *front* of an open case is Apple's pairi
 
 The trackpad keeps working alongside it; whichever moved last carries on from where the cursor is.
 
+## Build and install
+
+Needs Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+
+```sh
+scripts/install.sh    # build, copy to /Applications, open
+scripts/build.sh      # build only; prints the app's path
+scripts/test.sh       # engine tests, including replays of recorded sessions
+```
+
+Build products go to `~/Library/Caches/AirPointer`, not into this folder.
+
+The app is signed with the local Apple Development certificate. macOS ties the two permissions to that signature, so they survive rebuilds.
+
 ## Launch arguments for development
 
 ```
