@@ -62,6 +62,17 @@ enum Theme {
     static let settle = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.42)
 }
 
+/// Type roles. Rounded for display, plain for reading, tabular wherever a number changes.
+enum Typo {
+    static let display = Font.system(size: 30, weight: .bold, design: .rounded)
+    static let title = Font.system(size: 20, weight: .bold, design: .rounded)
+    static let pill = Font.system(size: 15, weight: .semibold, design: .rounded)
+    static let heading = Font.system(size: 14, weight: .semibold)
+    static let body = Font.system(size: 14)
+    static let caption = Font.system(size: 12.5)
+    static let figure = Font.system(size: 13, weight: .medium, design: .rounded).monospacedDigit()
+}
+
 extension Color {
     /// A colour that follows the window's appearance.
     init(light: UInt32, dark: UInt32) {
