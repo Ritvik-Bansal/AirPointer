@@ -1,6 +1,42 @@
 import PointerKit
 import SwiftUI
 
+/// The scene the whole app is built around: the case in your hand at the bottom, a small
+/// screen above it, and the lit dot you are aiming at on that screen.
+struct StageView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(spacing: 0) {
+            DotScreen(runtime: model.runtime, isLive: model.status == .pointing)
+                .frame(width: 360, height: 28 + 332 / DotScreen.displayAspect)
+
+            ZStack {
+                // The case stands on the floor rather than floating over it.
+                Ellipse()
+                    .fill(Theme.shadow(0.22))
+                    .frame(width: 166, height: 19)
+                    .blur(radius: 10)
+                    .offset(y: 80)
+                // Drawn larger than the space it is given, so the tap ring can spread past
+                // the case without being cut off. It never takes clicks.
+                CaseView(runtime: model.runtime, isAwake: model.isStreaming)
+                    .frame(width: 300, height: 231)
+                    .offset(y: 8)
+                    .allowsHitTesting(false)
+            }
+            .frame(width: 236, height: 196)
+            .padding(.top, 2)
+
+            // During setup the panel does the talking about permissions; the stage only
+            // reports what is happening on the stage.
+            StatusLine(staysOffPermissions: !model.hasFinishedSetup)
+                .padding(.top, 4)
+                .frame(height: 94, alignment: .top)
+        }
+    }
+}
+
 /// One line saying what the pointer is doing, one saying what to do about it.
 struct StatusLine: View {
     @Environment(AppModel.self) private var model
