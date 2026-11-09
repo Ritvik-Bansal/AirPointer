@@ -206,3 +206,23 @@ Literal white is used in three places that are objects rather than surfaces: the
 
 **The Panel-Says-What-It-Is-For Rule.** A panel opens with a plain sentence in `title` ("How the cursor answers your hand"), not a label and not the tab's name again.
 
+## Layout
+
+One fixed window, not resizable content: the SwiftUI frame is 880 by 640, running up under the title bar so the top bar shares its row with the window buttons (the window as captured is 880 by 672). There are no breakpoints.
+
+- **Top bar** (52 pt high, 18 pt side padding): 62 pt reserved for the window buttons, the app name, and the power switch at the right.
+- **Stage** (fills the remaining width): a top-aligned column of the dot screen (360 pt wide, height from the real display's aspect ratio), the case (drawn 300 by 231 in a 236 by 196 slot, so the tap ring can spread past it), and the status line (94 pt slot). Spare height falls under the status line.
+- **Panel** (448 pt wide, 22 pt inset, 18 pt from the window's right edge, 8 pt above the tab bar): present only when a tab is open or during first-run setup. With no panel the stage stands centred; opening one slides the stage left.
+- **Tab bar**: four large pills, 12 pt apart, 8 pt above and 14 pt below. Clicking the selected pill closes its panel. Hidden during first-run setup.
+- **The room**: the wall meets the floor at 62.8% of the window's height, behind the case. The wall lightens slightly toward the top; the floor is lightest at the skirting line, which is a 1 pt hairline fading out toward both sides.
+- **Menu-bar panel**: 340 pt wide, 16 pt padding, 14 pt between blocks, flat `stage` ground, a smaller dot screen (34 columns) and no case.
+
+Rhythm inside a panel: 14 to 16 pt between control rows, 4 to 5 pt inside a row (title, control, caption), 8 pt between a group heading and its rule, 12 pt between sibling pills. Groups are separated by a title and a hairline, never by boxing them.
+
+### Named Rules
+**The Stage-Stays Rule.** The case and the screen stay in view whatever else is open. Controls go in the panel beside the stage; nothing covers it and nothing replaces it, including first-run setup.
+
+**The Fit-First Rule.** A panel is composed to fit its height without scrolling. Where it cannot (Setup), the bottom edge fades to `panel` over 56 pt and a `chevron.compact.down` in `action` says there is more; both disappear at the end of the scroll.
+
+**The Arm's-Length Rule.** Anything clicked often is large: tab pills are 48 pt high with a 92 pt minimum label, native sliders and segmented pickers use the large control size, and nothing needs a hover to be understood.
+
