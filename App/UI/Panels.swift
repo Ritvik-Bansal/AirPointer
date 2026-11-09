@@ -128,6 +128,111 @@ struct ResponseCurve: View {
     }
 }
 
+// MARK: Taps
+
+/// How taps on the case become clicks.
+struct TapsPanel: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        VStack(alignment: .leading, spacing: 15) {
+            PanelHeading("Clicking with taps")
+
+            SettingToggle(title: "Tap the case to click", isOn: $model.prefs.tapsEnabled)
+
+            Group {
+                VStack(alignment: .leading, spacing: 12) {
+                    Picker("What clicks", selection: $model.prefs.tapScheme) {
+                        Text("Two taps click").tag(TapScheme.doubleTapClicks)
+                        Text("One tap clicks").tag(TapScheme.singleTapClicks)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .controlSize(.large)
+
+                    VStack(alignment: .leading, spacing: 7) {
+                        if model.prefs.tapScheme == .doubleTapClicks {
+                            GestureRow(taps: 2, text: "Click")
+                            GestureRow(taps: 1, text: "Right-click, after a short pause")
+                            GestureRow(taps: 3, text: model.prefs.thirdTap == .doubleClick ? "Double-click" : "Press and hold, to drag. Tap again to let go.")
+                        } else {
+                            GestureRow(taps: 1, text: "Click")
+                            GestureRow(taps: 2, text: "Double-click")
+                            GestureRow(taps: 1, text: "Right-click, while holding Control", prefix: "⌃")
+                        }
+                    }
+                    .padding(.leading, 2)
+
+                    if model.prefs.tapScheme == .doubleTapClicks {
+                        HStack {
+                            Text("A third tap").font(Typo.heading).foregroundStyle(Theme.ink)
+                            Spacer()
+                            Picker("A third tap", selection: $model.prefs.thirdTap) {
+                                Text("Double-clicks").tag(ThirdTapAction.doubleClick)
+                                Text("Holds to drag").tag(ThirdTapAction.dragLock)
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                            .controlSize(.large)
+                            .fixedSize()
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    SettingSlider(
+                        title: "Sensitivity",
+                        detail: "How hard a tap has to land to count.",
+                        value: $model.prefs.tapSensitivity, range: 0...1, low: "Firm", high: "Light"
+                    ) { "\(Int(($0 * 100).rounded()))%" }
+                    TapMeter(runtime: model.runtime)
+                }
+
+                SettingSlider(
+                    title: "Pace",
+                    detail: "The longest pause allowed between the two taps.",
+                    value: $model.prefs.tapWindow, range: 0.25...0.6, low: "Quick", high: "Relaxed"
+                ) { String(format: "%.2f s", $0) }
+
+                Label {
+                    Text("Tap the back or a side. Two taps on the front is Apple's pairing gesture.")
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "hand.tap")
+                }
+                .font(Typo.caption)
+                .foregroundStyle(Theme.inkSoft)
+            }
+            .disabled(!model.prefs.tapsEnabled)
+            .opacity(model.prefs.tapsEnabled ? 1 : 0.5)
+        }
+        .animation(Theme.quick, value: model.prefs.tapScheme)
+        .animation(Theme.quick, value: model.prefs.tapsEnabled)
+    }
+}
+
+private struct GestureRow: View {
+    let taps: Int
+    let text: String
+    var prefix: String?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 4) {
+                if let prefix {
+                    Text(prefix).font(Typo.figure).foregroundStyle(Theme.action)
+                }
+                TapDots(count: taps)
+            }
+            .frame(width: 58, alignment: .leading)
+            Text(text).font(Typo.body).foregroundStyle(Theme.ink)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(prefix == nil ? "" : "Control and ")\(taps) tap\(taps == 1 ? "" : "s"): \(text)")
+    }
+}
+
 /// How hard the last tap landed, against the line it has to cross to count.
 struct TapMeter: View {
     let runtime: PointerRuntime
