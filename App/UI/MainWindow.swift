@@ -17,6 +17,27 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 }
 
+/// The strip under the title bar: the name on the left, the master switch on the right.
+private struct TopBar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        HStack(spacing: 12) {
+            Spacer().frame(width: 62) // room for the window's close, minimise and zoom buttons
+            Text("AirPointer")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.inkSoft)
+            Spacer()
+            Toggle("Pointer", isOn: $model.isOn)
+                .toggleStyle(PowerSwitchStyle())
+                .help(model.isOn ? "Turn the pointer off" : "Turn the pointer on")
+        }
+        .padding(.horizontal, 18)
+        .frame(height: 52)
+    }
+}
+
 /// The white panel that holds a tab's controls. Outlined in the keyline like the pills.
 /// When there is more than fits, the bottom edge fades and a chevron says so.
 private struct PanelShell<Content: View, Footer: View>: View {
