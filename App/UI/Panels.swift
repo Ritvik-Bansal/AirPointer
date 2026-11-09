@@ -380,6 +380,105 @@ struct SetupPanel: View {
     }
 }
 
+// MARK: Signal
+
+/// The raw stream, for when something feels off and you want to see why.
+struct SignalPanel: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            PanelHeading("What the AirPods are sending")
+
+            SignalChart(runtime: model.runtime)
+                .frame(height: 128)
+
+            HStack(spacing: 16) {
+                Legend(color: Theme.keyline, text: "Left and right")
+                Legend(color: Theme.ink, text: "Up and down")
+                Legend(color: Theme.inkSoft, text: "Taps")
+            }
+
+            TimelineView(.periodic(from: .now, by: 0.5)) { _ in
+                let live = model.runtime.snapshot()
+                VStack(spacing: 0) {
+                    Figure(label: "Samples a second", value: live.isStreaming ? String(format: "%.0f", live.sampleRate) : "None")
+                    Figure(label: "Coming from", value: sensorName)
+                    Figure(label: "Delivery wobble", value: live.isStreaming ? String(format: "%.0f ms", live.deliveryJitter) : "–")
+                    Figure(label: "In the case", value: dockedText)
+                    Figure(label: "Battery", value: batteryText, last: true)
+                }
+            }
+
+            HStack(spacing: 10) {
+                Button(model.isRecording ? "Stop recording" : "Record the stream") { model.toggleRecording() }
+                    .buttonStyle(.pill(model.isRecording ? .primary : .secondary))
+                    .disabled(!model.isStreaming && !model.isRecording)
+                if let url = model.lastRecording, !model.isRecording {
+                    Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+                        .buttonStyle(.pill(.quiet))
+                }
+            }
+            Text(model.isRecording
+                ? "Recording. Do the thing that feels wrong, then stop."
+                : "Saves the raw motion as a text file, for tuning.")
+                .font(Typo.caption)
+                .foregroundStyle(Theme.inkSoft)
+        }
+    }
+
+    private var sensorName: String {
+        guard model.isStreaming else { return "–" }
+        return switch model.sensor {
+        case .left: "Left AirPod"
+        case .right: "Right AirPod"
+        case .unknown: "An AirPod"
+        }
+    }
+
+    private var dockedText: String {
+        guard let info = model.airPods, info.isConnected else { return "–" }
+        return info.isDocked ? "Yes" : "Not reported"
+    }
+
+    private var batteryText: String {
+        guard let info = model.airPods else { return "–" }
+        let parts = [info.left.map { "L \($0)%" }, info.right.map { "R \($0)%" }, info.caseLevel.map { "Case \($0)%" }].compactMap { $0 }
+        return parts.isEmpty ? "–" : parts.joined(separator: "   ")
+    }
+}
+
+private struct Legend: View {
+    let color: Color
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Capsule().fill(color).frame(width: 14, height: 4)
+            Text(text).font(Typo.caption).foregroundStyle(Theme.inkSoft)
+        }
+    }
+}
+
+private struct Figure: View {
+    let label: String
+    let value: String
+    var last = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(label).font(Typo.body).foregroundStyle(Theme.inkSoft)
+                Spacer()
+                Text(value).font(Typo.figure).foregroundStyle(Theme.ink)
+            }
+            .padding(.vertical, 6)
+            if !last { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 /// Six seconds of the stream: turning rates as two lines, tap strength as spikes from the floor.
 struct SignalChart: View {
     let runtime: PointerRuntime
