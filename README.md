@@ -12,6 +12,22 @@ Three things have to be true, and the app's Setup tab checks each one:
 2. **Both AirPods are in the case and the lid is open.** The lid is the switch. Closing it puts the pointer to sleep about five seconds later; opening it wakes it.
 3. **Two permissions are granted:** Motion & Fitness (to read the AirPods) and Accessibility (to move the cursor and click).
 
+## Using it
+
+| Do this | Get this |
+| --- | --- |
+| Aim the case | The cursor moves |
+| Tap the back twice | Click |
+| Tap once | Right-click, after a short pause |
+| Tap three times | Double-click (or press-and-hold for dragging, if you choose that in Taps) |
+| Close the lid | Pointer sleeps |
+| ⌃⌥⌘P | Turn the pointer on or off from anywhere |
+| ⌃⌥⌘C | Teach it your grip again |
+
+Tap the back or a side. Two taps on the *front* of an open case is Apple's pairing gesture.
+
+The trackpad keeps working alongside it; whichever moved last carries on from where the cursor is.
+
 ## Launch arguments for development
 
 ```
