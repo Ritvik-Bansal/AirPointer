@@ -154,3 +154,33 @@ It is a tool to be opened, tuned and closed. Text says what is happening and the
 - Native Mac controls (slider, switch, segmented picker) tinted with `action`, not redrawn.
 - Motion only as an answer to state: a tap, a lid, a panel, a switch.
 
+## Colors
+
+Cool blue-tinted neutrals with a single sky-blue accent and one amber for trouble; every token has a light and a dark value and follows the window's appearance.
+
+### Primary
+- **Sky Keyline** (`keyline`): the one colour. Pill and panel outlines (1.5 pt on pills, 1 pt at 70% on the panel), lit dots, tap-count dots, setup progress dots, the response curve and the left-right trace, the case's status light and tap ring, the click ring at the cursor. Never used for text in light mode.
+- **Deep Sky Action** (`action`): filled controls and accent text: the primary pill, the power switch when on, secondary pill labels, value readouts, the done checkmark, the scroll chevron, the tint of native sliders and switches, and the asset-catalog accent colour. Deeper than the keyline by day so white labels and small text clear 4.5:1 (per the source); at night it is the same value as the keyline.
+- **On-Action** (`on-action`): text on an `action` fill: white by day, near-black blue at night.
+
+### Secondary
+- **Amber Warn** (`warn`): a requirement only the user can meet: the exclamation mark on an unmet Setup row and the 9 pt badge on the Setup pill. Nothing else.
+
+### Neutral
+- **Cool Matte White / Blue-Black** (`stage`): the wall, and the flat ground of the menu-bar panel and the Signal chart well.
+- **Floor Shade** (`stage-floor`): the floor, a shade deeper than the wall so it recedes.
+- **Panel White** (`panel`): raised surfaces: pills, the panel, the dot screen's face.
+- **Slate Ink** (`ink`): headlines, control titles, figures, the up-down trace, the tap meter's threshold line.
+- **Soft Slate** (`ink-soft`): secondary text, tinted toward the stage rather than neutral grey; also the waiting symbol, tap spikes, and the idle cursor marker on the screen.
+- **Hairline** (`hairline`): 1 pt rules under group headings and between figures, the skirting line, the unlit screen's outline, chart axes, the off switch's track, the tap meter's track.
+- **Unlit Dot** (`dot-off`): an unlit dot, on the screen, in tap counts and in setup progress.
+
+Literal white is used in three places that are objects rather than surfaces: the power switch's thumb, the halo under the click ring, and the case.
+
+### Named Rules
+**The One Colour Rule.** There is one accent hue. `keyline` draws lines and lit things; `action` fills controls and colours text. A second hue is never added for emphasis, category or decoration.
+
+**The Only-You-Can-Fix-It Rule.** `warn` marks a thing only the user can fix (a permission, Automatic Ear Detection). It is never decorative, never a generic "notice", and never used for a state that fixes itself, which is shown in `ink-soft` as waiting.
+
+**The Outline-Not-Text Rule.** By day the keyline is too light for text. Anything that must be read in the accent uses `action`.
+
