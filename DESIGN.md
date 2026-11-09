@@ -274,3 +274,18 @@ A wide capsule (32 pt high) that says which way it is set: "On" in `on-action` o
 ### Navigation (tab bar)
 Four large pills: Feel, Taps, Setup, Signal. Unselected is secondary, selected is primary; selecting the open one closes it. The Setup pill carries a 9 pt `warn` dot at its top-right corner while something only the user can fix is in the way.
 
+### Panel
+The one container. `panel` fill, 22 pt continuous corners, 1 pt keyline outline at 70%, the Panel shadow, 22 pt inset, 448 pt wide. It slides in from the right with the settle curve. Content is a single left-aligned column that opens with a `title` sentence; an optional footer sits under the scroll area (first-run setup's "Skip setup").
+
+### Control rows
+- **Slider row:** heading at the left, readout in `figure` and `action` at the right; a native large slider tinted `action` with 46 pt end labels in caption ("Slow", "Fast"); one caption line saying what it changes.
+- **Switch row:** heading and optional caption at the left, a native switch tinted `action` at the right.
+- **Choice:** a native large segmented picker.
+- **Group heading:** a `title` line with a 1 pt hairline 8 pt beneath, 10 pt of extra space above.
+- **Checklist row (Setup):** a 19 pt SF Symbol at the left (filled checkmark in `action` when done, dashed circle in `ink-soft` when waiting, filled exclamation mark in `warn` when the user must act), the heading with its one small pill on the same line, and the explanation in caption beneath at full width.
+- **Shortcut field:** heading at the left, a small secondary pill showing the shortcut in `figure`; it turns primary and reads "Press keys…" while recording.
+- **Figure row (Signal):** label in body and `ink-soft`, value in `figure` and `ink`, a hairline between rows.
+
+### Tap dots
+One, two or three 9 pt keyline dots, 5 pt apart: the picture of a tap count, used wherever a gesture is named. The same dot vocabulary marks first-run progress (7 pt, the current step 10 pt, lit up to the current step).
+
