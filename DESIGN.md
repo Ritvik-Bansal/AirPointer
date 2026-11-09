@@ -295,3 +295,15 @@ A miniature of the Mac's main display in its real aspect ratio: 40 by 26 dots on
 ### The case (signature)
 The AirPods case in SceneKit, generated rather than modelled, shown as a mirror would show it: facing the viewer, lid open behind the two docked AirPods, turning as the real one turns (yaw within 55 degrees, roll within 75, easing back to centre). The AirPods are plain white heads with nothing drawn on them: they no longer carry dark vents, because a dark vent on each read, at any size, as a pair of eyes. White physically based plastic (the shell at roughness 0.3) under a soft studio environment, one directional light and a cool ambient fill; in Dark Mode the environment dims and the lights are raised so the case stays white. Asleep is a shut lid and an unlit status light; awake, the lid stands open at 105 degrees and the light is the keyline. A tap sends a thin keyline ring out from behind the case, wider than tall (its height is 0.76 of its width). The ring does not turn with the case. It sits 3.4 model units behind it, far enough back to stay behind the lid however the case is tilted, and is lowered by 0.75 and widened to match, so that from the camera it is where and as large as it would be just behind the case.
 
+### Status line
+The display headline, one body line of what to do, and at most one small pill, centred under the case. It reports only what is happening on the stage; during first-run setup, permissions are the panel's subject.
+
+### Charts
+Drawn in a canvas with the same few colours: keyline for the primary trace or curve (2 to 2.5 pt, round joins, a 10% keyline fill under the response curve), `ink` at 75% for the second trace, `ink-soft` for tap spikes and thresholds (dashed 3-3), hairline for axes. The live point on the response curve is a 10 pt `action` dot on an 18 pt keyline disc at 20%. The tap meter is a 10 pt capsule track in hairline whose bar turns keyline once it crosses the `ink` threshold line.
+
+### Click ring
+At the cursor on every click, in a click-through panel above everything: a 2.5 pt keyline ring over a 5 pt white halo so it reads on any background. One ring for a click, two for a double-click, a dashed ring for a right-click, a ring closing inward for a drag hold. From source; it was not captured or reviewed.
+
+### Motion
+Two curves. `quick` (ease-out, 0.18 s) for state changes on a control or a line of text. `settle` (timing curve 0.16, 1, 0.3, 1 over 0.42 s, no bounce) for layout moves: the panel sliding in, the stage moving aside, the tab bar arriving. The lid opens in 0.42 s and shuts in 0.3 s. With Reduce Motion on, slides become fades on the quick curve, the lid snaps, and every ring holds one size and only fades. Motion was not reviewed.
+
