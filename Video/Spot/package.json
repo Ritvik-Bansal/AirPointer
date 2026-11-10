@@ -1,0 +1,11 @@
+{
+  "name": "airpointer-spot",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The 30-second AirPointer spot: a Three.js scene rendered frame by frame in headless Chrome and encoded with ffmpeg.",
+  "type": "module",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0",
+    "three": "^0.180.0"
+  }
+}
