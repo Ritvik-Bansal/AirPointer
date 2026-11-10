@@ -175,6 +175,45 @@ final class Film {
         .environment(\.colorScheme, .dark)
     }
 
+    // MARK: Where the case is
+
+    private struct Placement {
+        var centre: CGPoint
+        var scale: Double
+    }
+
+    /// Large, right of centre: the opening, the chapters about the case itself, and the end.
+    private let hero = Placement(centre: CGPoint(x: 1335, y: 630), scale: 1.0)
+    /// Under the dot screen, in the hand, while it is aimed and tapped.
+    private let under = Placement(centre: CGPoint(x: 1390, y: 839), scale: 0.55)
+    /// Small and out of the way, above the signal it is producing.
+    private let aside = Placement(centre: CGPoint(x: 1545, y: 322), scale: 0.5)
+    /// Beside the results, midway between the last of them and the margin.
+    private let beside = Placement(centre: CGPoint(x: 1520, y: 600), scale: 0.5)
+    private let baseSize = CGSize(width: 1000, height: 780)
+    private let screenCentre = CGPoint(x: 1390, y: 335)
+
+    /// The case travels between its places; it is never faded. The one move nobody sees
+    /// happens behind the second clip.
+    private func placement(_ t: Double) -> Placement {
+        let moves: [(start: Double, over: Double, to: Placement)] = [
+            (At.aim - 0.3, 1.0, under),
+            (At.clipB + 3.0, 0.02, hero),
+            (At.jolt - 0.1, 1.0, aside),
+            (At.proof - 0.1, 1.0, beside),
+            (At.setup - 0.1, 1.0, hero),
+        ]
+        var place = hero
+        for move in moves {
+            let p = glide(span(t, from: move.start, over: move.over))
+            place = Placement(
+                centre: CGPoint(x: mix(place.centre.x, move.to.centre.x, p), y: mix(place.centre.y, move.to.centre.y, p)),
+                scale: mix(place.scale, move.to.scale, p)
+            )
+        }
+        return place
+    }
+
 }
 
 extension Take {
