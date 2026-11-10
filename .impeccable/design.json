@@ -1,0 +1,1050 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T11:58:37Z",
+  "title": "Design System: AirPointer",
+  "extensions": {
+    "platform": {
+      "kind": "native macOS (SwiftUI, AppKit, SceneKit)",
+      "units": "points; px in DESIGN.md frontmatter and in the component CSS below stands for points",
+      "tokenSource": "App/UI/Theme.swift (Theme, Typo)",
+      "note": "Component html/css are light-appearance web approximations for the panel only; the app has no HTML or CSS. Each colour token has a Dark Mode pair under the -dark key."
+    },
+    "verification": {
+      "reviewedInCaptures": [
+        "stage, pointing (light, dark)",
+        "stage, asleep",
+        "Feel",
+        "Taps",
+        "Setup",
+        "Signal",
+        "first-run setup, first step",
+        "menu-bar panel"
+      ],
+      "fromSourceOnly": [
+        "Off state",
+        "Paused state",
+        "calibration states",
+        "controls in a key window",
+        "click ring at the cursor",
+        "all motion"
+      ]
+    },
+    "colorMeta": {
+      "stage": {
+        "role": "neutral",
+        "displayName": "Cool Matte White",
+        "canonical": "#F4F7FA",
+        "oklch": "oklch(97.5% 0.005 248)",
+        "tonalRamp": [
+          "oklch(15% 0.005 248)",
+          "oklch(26% 0.005 248)",
+          "oklch(38% 0.005 248)",
+          "oklch(50% 0.005 248)",
+          "oklch(62% 0.005 248)",
+          "oklch(74% 0.005 248)",
+          "oklch(85% 0.005 248)",
+          "oklch(95% 0.005 248)"
+        ],
+        "darkPair": "stage-dark"
+      },
+      "stage-floor": {
+        "role": "neutral",
+        "displayName": "Floor Shade",
+        "canonical": "#E4EBF2",
+        "oklch": "oklch(93.7% 0.012 248)",
+        "tonalRamp": [
+          "oklch(15% 0.012 248)",
+          "oklch(26% 0.012 248)",
+          "oklch(38% 0.012 248)",
+          "oklch(50% 0.012 248)",
+          "oklch(62% 0.012 248)",
+          "oklch(74% 0.012 248)",
+          "oklch(85% 0.012 248)",
+          "oklch(95% 0.012 248)"
+        ],
+        "darkPair": "stage-floor-dark"
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "oklch(15% 0.000 90)",
+          "oklch(26% 0.000 90)",
+          "oklch(38% 0.000 90)",
+          "oklch(50% 0.000 90)",
+          "oklch(62% 0.000 90)",
+          "oklch(74% 0.000 90)",
+          "oklch(85% 0.000 90)",
+          "oklch(95% 0.000 90)"
+        ],
+        "darkPair": "panel-dark"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#1F2A36",
+        "oklch": "oklch(28.0% 0.027 251)",
+        "tonalRamp": [
+          "oklch(15% 0.027 251)",
+          "oklch(26% 0.027 251)",
+          "oklch(38% 0.027 251)",
+          "oklch(50% 0.027 251)",
+          "oklch(62% 0.027 251)",
+          "oklch(74% 0.027 251)",
+          "oklch(85% 0.027 251)",
+          "oklch(95% 0.027 251)"
+        ],
+        "darkPair": "ink-dark"
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Slate",
+        "canonical": "#566575",
+        "oklch": "oklch(50.0% 0.032 250)",
+        "tonalRamp": [
+          "oklch(15% 0.032 250)",
+          "oklch(26% 0.032 250)",
+          "oklch(38% 0.032 250)",
+          "oklch(50% 0.032 250)",
+          "oklch(62% 0.032 250)",
+          "oklch(74% 0.032 250)",
+          "oklch(85% 0.032 250)",
+          "oklch(95% 0.032 250)"
+        ],
+        "darkPair": "ink-soft-dark"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#D3DCE5",
+        "oklch": "oklch(89.0% 0.016 248)",
+        "tonalRamp": [
+          "oklch(15% 0.016 248)",
+          "oklch(26% 0.016 248)",
+          "oklch(38% 0.016 248)",
+          "oklch(50% 0.016 248)",
+          "oklch(62% 0.016 248)",
+          "oklch(74% 0.016 248)",
+          "oklch(85% 0.016 248)",
+          "oklch(95% 0.016 248)"
+        ],
+        "darkPair": "hairline-dark"
+      },
+      "keyline": {
+        "role": "primary",
+        "displayName": "Sky Keyline",
+        "canonical": "#2FA8E6",
+        "oklch": "oklch(69.5% 0.137 237)",
+        "tonalRamp": [
+          "oklch(15% 0.137 237)",
+          "oklch(26% 0.137 237)",
+          "oklch(38% 0.137 237)",
+          "oklch(50% 0.137 237)",
+          "oklch(62% 0.137 237)",
+          "oklch(74% 0.137 237)",
+          "oklch(85% 0.137 237)",
+          "oklch(95% 0.137 237)"
+        ],
+        "darkPair": "keyline-dark"
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Deep Sky Action",
+        "canonical": "#0B74B4",
+        "oklch": "oklch(53.9% 0.130 244)",
+        "tonalRamp": [
+          "oklch(15% 0.130 244)",
+          "oklch(26% 0.130 244)",
+          "oklch(38% 0.130 244)",
+          "oklch(50% 0.130 244)",
+          "oklch(62% 0.130 244)",
+          "oklch(74% 0.130 244)",
+          "oklch(85% 0.130 244)",
+          "oklch(95% 0.130 244)"
+        ],
+        "darkPair": "action-dark"
+      },
+      "on-action": {
+        "role": "primary",
+        "displayName": "On-Action",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "oklch(15% 0.000 90)",
+          "oklch(26% 0.000 90)",
+          "oklch(38% 0.000 90)",
+          "oklch(50% 0.000 90)",
+          "oklch(62% 0.000 90)",
+          "oklch(74% 0.000 90)",
+          "oklch(85% 0.000 90)",
+          "oklch(95% 0.000 90)"
+        ],
+        "darkPair": "on-action-dark"
+      },
+      "warn": {
+        "role": "secondary",
+        "displayName": "Amber Warn",
+        "canonical": "#A85A07",
+        "oklch": "oklch(54.9% 0.130 57)",
+        "tonalRamp": [
+          "oklch(15% 0.130 57)",
+          "oklch(26% 0.130 57)",
+          "oklch(38% 0.130 57)",
+          "oklch(50% 0.130 57)",
+          "oklch(62% 0.130 57)",
+          "oklch(74% 0.130 57)",
+          "oklch(85% 0.130 57)",
+          "oklch(95% 0.130 57)"
+        ],
+        "darkPair": "warn-dark"
+      },
+      "dot-off": {
+        "role": "neutral",
+        "displayName": "Unlit Dot",
+        "canonical": "#CBD5DE",
+        "oklch": "oklch(86.8% 0.017 245)",
+        "tonalRamp": [
+          "oklch(15% 0.017 245)",
+          "oklch(26% 0.017 245)",
+          "oklch(38% 0.017 245)",
+          "oklch(50% 0.017 245)",
+          "oklch(62% 0.017 245)",
+          "oklch(74% 0.017 245)",
+          "oklch(85% 0.017 245)",
+          "oklch(95% 0.017 245)"
+        ],
+        "darkPair": "dot-off-dark"
+      },
+      "stage-dark": {
+        "role": "neutral",
+        "displayName": "Blue-Black Night (Dark Mode)",
+        "canonical": "#0E151D",
+        "oklch": "oklch(19.3% 0.019 252)",
+        "tonalRamp": [
+          "oklch(15% 0.019 252)",
+          "oklch(26% 0.019 252)",
+          "oklch(38% 0.019 252)",
+          "oklch(50% 0.019 252)",
+          "oklch(62% 0.019 252)",
+          "oklch(74% 0.019 252)",
+          "oklch(85% 0.019 252)",
+          "oklch(95% 0.019 252)"
+        ]
+      },
+      "stage-floor-dark": {
+        "role": "neutral",
+        "displayName": "Floor Shade (Dark Mode)",
+        "canonical": "#090E14",
+        "oklch": "oklch(16.1% 0.015 253)",
+        "tonalRamp": [
+          "oklch(15% 0.015 253)",
+          "oklch(26% 0.015 253)",
+          "oklch(38% 0.015 253)",
+          "oklch(50% 0.015 253)",
+          "oklch(62% 0.015 253)",
+          "oklch(74% 0.015 253)",
+          "oklch(85% 0.015 253)",
+          "oklch(95% 0.015 253)"
+        ]
+      },
+      "panel-dark": {
+        "role": "neutral",
+        "displayName": "Panel White (Dark Mode)",
+        "canonical": "#16202B",
+        "oklch": "oklch(23.9% 0.026 251)",
+        "tonalRamp": [
+          "oklch(15% 0.026 251)",
+          "oklch(26% 0.026 251)",
+          "oklch(38% 0.026 251)",
+          "oklch(50% 0.026 251)",
+          "oklch(62% 0.026 251)",
+          "oklch(74% 0.026 251)",
+          "oklch(85% 0.026 251)",
+          "oklch(95% 0.026 251)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Slate Ink (Dark Mode)",
+        "canonical": "#EAF2F8",
+        "oklch": "oklch(95.7% 0.012 240)",
+        "tonalRamp": [
+          "oklch(15% 0.012 240)",
+          "oklch(26% 0.012 240)",
+          "oklch(38% 0.012 240)",
+          "oklch(50% 0.012 240)",
+          "oklch(62% 0.012 240)",
+          "oklch(74% 0.012 240)",
+          "oklch(85% 0.012 240)",
+          "oklch(95% 0.012 240)"
+        ]
+      },
+      "ink-soft-dark": {
+        "role": "neutral",
+        "displayName": "Soft Slate (Dark Mode)",
+        "canonical": "#9FB2C4",
+        "oklch": "oklch(75.5% 0.033 247)",
+        "tonalRamp": [
+          "oklch(15% 0.033 247)",
+          "oklch(26% 0.033 247)",
+          "oklch(38% 0.033 247)",
+          "oklch(50% 0.033 247)",
+          "oklch(62% 0.033 247)",
+          "oklch(74% 0.033 247)",
+          "oklch(85% 0.033 247)",
+          "oklch(95% 0.033 247)"
+        ]
+      },
+      "hairline-dark": {
+        "role": "neutral",
+        "displayName": "Hairline (Dark Mode)",
+        "canonical": "#27343F",
+        "oklch": "oklch(31.8% 0.026 244)",
+        "tonalRamp": [
+          "oklch(15% 0.026 244)",
+          "oklch(26% 0.026 244)",
+          "oklch(38% 0.026 244)",
+          "oklch(50% 0.026 244)",
+          "oklch(62% 0.026 244)",
+          "oklch(74% 0.026 244)",
+          "oklch(85% 0.026 244)",
+          "oklch(95% 0.026 244)"
+        ]
+      },
+      "keyline-dark": {
+        "role": "primary",
+        "displayName": "Sky Keyline (Dark Mode)",
+        "canonical": "#48B9F5",
+        "oklch": "oklch(74.7% 0.133 236)",
+        "tonalRamp": [
+          "oklch(15% 0.133 236)",
+          "oklch(26% 0.133 236)",
+          "oklch(38% 0.133 236)",
+          "oklch(50% 0.133 236)",
+          "oklch(62% 0.133 236)",
+          "oklch(74% 0.133 236)",
+          "oklch(85% 0.133 236)",
+          "oklch(95% 0.133 236)"
+        ]
+      },
+      "action-dark": {
+        "role": "primary",
+        "displayName": "Deep Sky Action (Dark Mode)",
+        "canonical": "#48B9F5",
+        "oklch": "oklch(74.7% 0.133 236)",
+        "tonalRamp": [
+          "oklch(15% 0.133 236)",
+          "oklch(26% 0.133 236)",
+          "oklch(38% 0.133 236)",
+          "oklch(50% 0.133 236)",
+          "oklch(62% 0.133 236)",
+          "oklch(74% 0.133 236)",
+          "oklch(85% 0.133 236)",
+          "oklch(95% 0.133 236)"
+        ]
+      },
+      "on-action-dark": {
+        "role": "primary",
+        "displayName": "On-Action (Dark Mode)",
+        "canonical": "#06202F",
+        "oklch": "oklch(23.2% 0.043 238)",
+        "tonalRamp": [
+          "oklch(15% 0.043 238)",
+          "oklch(26% 0.043 238)",
+          "oklch(38% 0.043 238)",
+          "oklch(50% 0.043 238)",
+          "oklch(62% 0.043 238)",
+          "oklch(74% 0.043 238)",
+          "oklch(85% 0.043 238)",
+          "oklch(95% 0.043 238)"
+        ]
+      },
+      "warn-dark": {
+        "role": "secondary",
+        "displayName": "Amber Warn (Dark Mode)",
+        "canonical": "#F5B041",
+        "oklch": "oklch(80.4% 0.146 75)",
+        "tonalRamp": [
+          "oklch(15% 0.146 75)",
+          "oklch(26% 0.146 75)",
+          "oklch(38% 0.146 75)",
+          "oklch(50% 0.146 75)",
+          "oklch(62% 0.146 75)",
+          "oklch(74% 0.146 75)",
+          "oklch(85% 0.146 75)",
+          "oklch(95% 0.146 75)"
+        ]
+      },
+      "dot-off-dark": {
+        "role": "neutral",
+        "displayName": "Unlit Dot (Dark Mode)",
+        "canonical": "#2B3947",
+        "oklch": "oklch(33.8% 0.031 249)",
+        "tonalRamp": [
+          "oklch(15% 0.031 249)",
+          "oklch(26% 0.031 249)",
+          "oklch(38% 0.031 249)",
+          "oklch(50% 0.031 249)",
+          "oklch(62% 0.031 249)",
+          "oklch(74% 0.031 249)",
+          "oklch(85% 0.031 249)",
+          "oklch(95% 0.031 249)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Status headline under the case and the title of each first-run step. One per view.",
+        "swiftUI": "Font.system(size: 30, weight: .bold, design: .rounded)"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The sentence that opens a panel, group headings, the menu-bar panel's headline.",
+        "swiftUI": "Font.system(size: 20, weight: .bold, design: .rounded)"
+      },
+      "pill": {
+        "displayName": "Pill",
+        "purpose": "Regular and large pill labels and the power switch.",
+        "swiftUI": "Font.system(size: 15, weight: .semibold, design: .rounded)"
+      },
+      "pill-small": {
+        "displayName": "Pill, small",
+        "purpose": "Small pill labels.",
+        "swiftUI": "Font.system(size: 13, weight: .semibold, design: .rounded)"
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "The title of a control row.",
+        "swiftUI": "Font.system(size: 14, weight: .semibold)"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Status detail, gesture descriptions, figure labels.",
+        "swiftUI": "Font.system(size: 14)"
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "The line under a control saying what it changes; slider ends, chart labels, legends.",
+        "swiftUI": "Font.system(size: 12.5)"
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Any number that changes on screen.",
+        "swiftUI": "Font.system(size: 13, weight: .medium, design: .rounded).monospacedDigit()"
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-function",
+        "value": "Theme.shadow(s): light = #1F2A36 at alpha s; dark = srgb(0, 0.01, 0.03) at alpha min(1, 4.5 s)",
+        "purpose": "The only source of shadow colour. Dark in both appearances."
+      },
+      {
+        "name": "panel",
+        "value": ".shadow(color: Theme.shadow(0.10), radius: 16, y: 8)",
+        "purpose": "The settings panel."
+      },
+      {
+        "name": "screen",
+        "value": ".shadow(color: Theme.shadow(0.10), radius: 12, y: 6)",
+        "purpose": "The dot screen."
+      },
+      {
+        "name": "screen-glow",
+        "value": ".shadow(color: Theme.keyline.opacity(0.32), radius: 14)",
+        "purpose": "Around the dot screen, only while the pointer is live. The only glow."
+      },
+      {
+        "name": "pill-secondary",
+        "value": ".shadow(color: Theme.shadow(0.06), radius: 2, y: 1); hover Theme.shadow(0.12), radius: 6, y: 3",
+        "purpose": "Secondary pills."
+      },
+      {
+        "name": "pill-primary",
+        "value": ".shadow(color: Theme.shadow(0.16), radius: 4, y: 2); hover radius: 7, y: 3",
+        "purpose": "Primary pills."
+      },
+      {
+        "name": "switch-thumb",
+        "value": ".shadow(color: Theme.shadow(0.2), radius: 1.5, y: 1)",
+        "purpose": "The power switch's white thumb."
+      },
+      {
+        "name": "contact",
+        "value": "Ellipse 166 x 19 pt, fill Theme.shadow(0.22), blur 10",
+        "purpose": "Under the case, so it stands on the floor."
+      }
+    ],
+    "motion": [
+      {
+        "name": "quick",
+        "value": "Animation.easeOut(duration: 0.18)",
+        "purpose": "State changes on a control or a line of text; the fallback for layout moves under Reduce Motion."
+      },
+      {
+        "name": "settle",
+        "value": "Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.42)",
+        "purpose": "Layout moves: panel slide, stage moving aside, tab bar arriving. No bounce."
+      },
+      {
+        "name": "lid",
+        "value": "ease-out, 0.42 s open, 0.3 s shut",
+        "purpose": "The case lid following awake and asleep. Snaps under Reduce Motion."
+      },
+      {
+        "name": "screen-ring",
+        "value": "0.6 s, radius eased by 1 - (1 - t)^3, fading",
+        "purpose": "Ring of lit dots on a tap. Holds one size and fades under Reduce Motion."
+      },
+      {
+        "name": "screen-trail",
+        "value": "0.42 s linear fade",
+        "purpose": "Trail behind the lit cursor dot while live."
+      },
+      {
+        "name": "case-ring",
+        "value": "0.5 s, scale 0.8 to 1.16 eased by 1 - (1 - t)^3, fade-out ease-in",
+        "purpose": "Keyline ring spreading from behind the case on a tap. The ring sits 3.4 model units behind the case, lowered 0.75 and widened to match (SCNTube inner 3.42, outer 3.59; height 0.76 of width), so that from the camera it looks as it would just behind the case and stays behind the lid at any tilt. Fades only under Reduce Motion."
+      },
+      {
+        "name": "click-ring",
+        "value": "0.46 s, scale on cubic-bezier(0.16, 1, 0.3, 1), opacity 0-1-1-0; second ring delayed 0.09 s",
+        "purpose": "Ring at the cursor on each click. Fades only under Reduce Motion. Not reviewed."
+      }
+    ],
+    "breakpoints": [],
+    "layout": {
+      "window": "880 x 640 pt content, fixed (880 x 672 with the title bar as captured)",
+      "topBar": "52 pt",
+      "panelWidth": "448 pt",
+      "dotScreenWidth": "360 pt",
+      "horizon": "62.8% of window height",
+      "menuBarPanelWidth": "340 pt"
+    },
+    "sharedObjects": {
+      "case": {
+        "source": "App/UI/CaseView.swift (CaseScene), used by the app and, through Video/Sources/film/CaseRender.swift, by the film",
+        "airPods": "Plain white heads in the shell material; no dark vents (a vent on each read as a pair of eyes).",
+        "tapRing": "SCNTube inner 3.42, outer 3.59, constant-lit Theme.keyline, at (0, -0.75, -3.4): behind the case, lowered and widened so it looks the same from the camera. Height 0.76 of width. Scale 0.8 to 1.16, opacity 0.95 falling to 0."
+      }
+    },
+    "surfaces": {
+      "film": {
+        "name": "The Film",
+        "kind": "film drawn frame by frame in SwiftUI; not interactive",
+        "source": "Video/Sources/film (Look.swift, Motion.swift, Film.swift, Stage.swift, Diagrams.swift, Footage.swift, Take.swift, CaseRender.swift); written out by Video/render.sh",
+        "tokenSource": "Video/Sources/film/Look.swift (Look)",
+        "surfaceBrief": ".impeccable/surfaces/video-sources-film-film-swift.md",
+        "units": "real pixels in a 1920 x 1080 frame; not points",
+        "frame": {
+          "width": 1920,
+          "height": 1080,
+          "fps": 60,
+          "duration": "75.9 s",
+          "scaledOutput": "3840 x 2160 with render.sh --4k"
+        },
+        "unfinished": [
+          "The two clips are placeholders: Video/footage is empty, so slots A and B show a card until the user films them.",
+          "There is no sound: no music file and no clip sound exist; the rendered files have a picture track only.",
+          "The chapter order (show, prove with a clip, twice, then explain) was the builder's choice and awaits the user's confirmation.",
+          "The address on the end card (github.com/Ritvik-Bansal/AirPointer) is not confirmed until the repository exists."
+        ],
+        "verification": {
+          "reviewedInStills": [
+            "title card, lid shut (0.00 s) and open (2.00 s)",
+            "aim (7.20 s, 10.30 s)",
+            "clip A card opening (12.05 s) and open (15.00 s)",
+            "tap ring on the case and the screen (19.90 s); tag (24.00 s)",
+            "sensors and callouts (36.50 s)",
+            "gravity diagram, turning (42.30 s) and tilting (45.90 s)",
+            "signal display, early (50.30 s) and full (56.20 s)",
+            "results (60.00 s)",
+            "steps (66.90 s)",
+            "end card (73.00 s)",
+            "clip B card (28.0 s) and last frame (75.85 s), taken from Video/out/airpointer-base.mp4"
+          ],
+          "fromSourceOnly": [
+            "timing of all motion",
+            "the case's moves between placements"
+          ]
+        },
+        "colors": {
+          "wall": {
+            "value": "#0E151D",
+            "sameAs": "stage-dark",
+            "use": "The wall; fill of the tag capsule and the callout ring."
+          },
+          "floor": {
+            "value": "#090E14",
+            "sameAs": "stage-floor-dark",
+            "use": "The floor, below 742 px."
+          },
+          "panel": {
+            "value": "#16202B",
+            "sameAs": "panel-dark",
+            "use": "Face of the dot screen, the signal display and the clip card."
+          },
+          "ink": {
+            "value": "#EAF2F8",
+            "sameAs": "ink-dark",
+            "use": "Headlines, labels on drawings, large figures, steps, a refused verdict, the hand-turning band over its limit."
+          },
+          "soft": {
+            "value": "#9FB2C4",
+            "sameAs": "ink-soft-dark",
+            "use": "Sentences, notes, callout lines, the gravity line, band labels, quiet lit dots."
+          },
+          "key": {
+            "value": "#48B9F5",
+            "sameAs": "keyline-dark",
+            "use": "Lit dots, live outlines, the tag outline, diagram arcs, counted taps, an accepted verdict, step numerals, the address."
+          },
+          "hairline": {
+            "value": "#2A3947",
+            "sameAs": null,
+            "use": "A display's outline before it is live; the clip frame's border. Differs from the app's hairline-dark (#27343F)."
+          },
+          "dotOff": {
+            "value": "#2B3947",
+            "sameAs": "dot-off-dark",
+            "use": "An unlit dot."
+          },
+          "dotLine": {
+            "value": "#566A7D",
+            "sameAs": null,
+            "use": "An unlit dot that is part of a threshold line across the signal display. Film only."
+          }
+        },
+        "typography": {
+          "floor": "32 px: embedded in a web page the film is shown at under half its size, and 32 is the least that still reads there",
+          "title": {
+            "swiftUI": "Look.headline(104): .system(size: 104, weight: .bold, design: .rounded), tracking -1.248",
+            "purpose": "AirPointer on the title and end cards."
+          },
+          "chapter-headline": {
+            "swiftUI": "Look.headline(72): .system(size: 72, weight: .bold, design: .rounded), tracking -0.864",
+            "purpose": "One or two lines per chapter."
+          },
+          "figure": {
+            "swiftUI": "Look.figure(n): .system(size: n, weight: .bold, design: .rounded).monospacedDigit(); n = 168, 64, 46",
+            "purpose": "A result (168, ink), its total (64, soft), a step numeral (46, key)."
+          },
+          "step": {
+            "swiftUI": ".system(size: 46, weight: .medium)",
+            "purpose": "The three steps."
+          },
+          "address": {
+            "swiftUI": ".system(size: 42, weight: .medium)",
+            "purpose": "The repository on the end card, in key."
+          },
+          "sentence": {
+            "swiftUI": "Look.sub: .system(size: 37, weight: .regular), lineSpacing 9",
+            "purpose": "Sentences under a headline (block 800 px wide; 700 and 900 used), result labels."
+          },
+          "label": {
+            "swiftUI": "Look.label: .system(size: 32, weight: .semibold, design: .rounded)",
+            "purpose": "Anything attached to a drawing: callouts, diagram and band labels, verdicts, the tag."
+          },
+          "small": {
+            "swiftUI": "Look.small: .system(size: 32, weight: .regular)",
+            "purpose": "The note along the bottom; the tested-with line on the end card."
+          }
+        },
+        "layout": {
+          "margin": "150 px left and right",
+          "horizon": "742 px (68.7% of frame height)",
+          "textTop": "142 px (headline); results 420 px; steps 330 px; end card address 296 px; note 84 px above the bottom edge",
+          "casePlacements": {
+            "renderSize": "1000 x 780 px at scale 1.0",
+            "hero": "centre (1335, 630), scale 1.0",
+            "under": "centre (1390, 839), scale 0.55",
+            "aside": "centre (1545, 322), scale 0.5",
+            "beside": "centre (1520, 600), scale 0.5"
+          },
+          "dotScreen": "740 x 470 px, centre (1390, 335)",
+          "signalDisplay": "left at 150 px, top at 556 px, 1620 px wide with band labels; 62 px beneath for verdicts",
+          "clipFrame": "x 150, y 84, 1620 x 912 px, corner radius 30, 2 px hairline border"
+        },
+        "timeline": [
+          {
+            "start": 0.0,
+            "chapter": "open"
+          },
+          {
+            "start": 4.4,
+            "chapter": "aim"
+          },
+          {
+            "start": 11.8,
+            "chapter": "clip A",
+            "duration": 6.5,
+            "placeholder": true
+          },
+          {
+            "start": 18.3,
+            "chapter": "tap"
+          },
+          {
+            "start": 25.9,
+            "chapter": "clip B",
+            "duration": 6.5,
+            "placeholder": true
+          },
+          {
+            "start": 32.4,
+            "chapter": "sensors"
+          },
+          {
+            "start": 39.2,
+            "chapter": "gravity"
+          },
+          {
+            "start": 47.6,
+            "chapter": "jolt"
+          },
+          {
+            "start": 57.2,
+            "chapter": "proof"
+          },
+          {
+            "start": 63.2,
+            "chapter": "setup"
+          },
+          {
+            "start": 69.7,
+            "chapter": "end"
+          },
+          {
+            "start": 75.9,
+            "chapter": "finish"
+          }
+        ],
+        "motion": [
+          {
+            "name": "settle",
+            "value": "x >= 1 ? 1 : 1 - pow(2, -10 * x)",
+            "purpose": "Things arriving. Not the app's settle."
+          },
+          {
+            "name": "glide",
+            "value": "x < 0.5 ? 4x^3 : 1 - pow(-2x + 2, 3) / 2",
+            "purpose": "Things travelling and lines drawing on."
+          },
+          {
+            "name": "reveal",
+            "value": "rise from 105% of own height below, masked by own frame, 0.7 s on settle; lines 0.09 s apart; leaves by 0.28 s fade",
+            "purpose": "Headlines and large figures."
+          },
+          {
+            "name": "lift",
+            "value": "rise 16 px over 0.6 s on settle, fade in over 0.35 s; leaves by 0.28 s fade",
+            "purpose": "Sentences, labels, notes, steps, counted dots."
+          },
+          {
+            "name": "case-move",
+            "value": "centre and scale mixed on glide over 1.0 s, starting 0.1 s before the chapter (0.3 s before aim); one 0.02 s move behind clip B",
+            "purpose": "The case travelling between placements. Never faded or cut."
+          },
+          {
+            "name": "draw-on",
+            "value": "outline trim on glide; callout line 0.55 s; gravity line and arcs 0.7 s",
+            "purpose": "Display outlines, callouts, the gravity diagram."
+          },
+          {
+            "name": "clip-frame",
+            "value": "height 0 to 912 px from the middle over 0.5 s on glide; closes over the last 0.45 s; opaque throughout",
+            "purpose": "A footage slot opening over the stage and closing."
+          },
+          {
+            "name": "screen-ring",
+            "value": "0.6 s, radius 1.2 to 9.7 dots eased by 1 - (1 - t)^3, fading",
+            "purpose": "Ring of lit dots on a tap."
+          },
+          {
+            "name": "screen-trail",
+            "value": "22 frames at 60 fps, fading",
+            "purpose": "Trail behind the cursor while the case is aimed."
+          },
+          {
+            "name": "tag",
+            "value": "1.2 s life; arrives on settle over the first 22%, fades over the last 28%",
+            "purpose": "The word by the cursor naming what the taps were."
+          }
+        ],
+        "displays": {
+          "sharedFace": "panel fill, 30 px continuous corners, 30 px padding, 3 px outline (hairline, then key when live), unlit dots 5.8 px in dotOff",
+          "screen": "44 x 27 dots; cursor lit in key, up to 13 px across; trail; tap rings; tag capsule (wall fill, 2.5 px key outline, label in ink)",
+          "signal": "87 columns at the screen's dot spacing; 8 rows hand turning (4 deg/s per dot, limit 16 deg/s), 1 gap, 9 rows jolts (line at row 3); lit dots 8.8 px: soft ordinary, key counted tap, ink hand over limit; dotLine marks each threshold; verdicts beneath in key (accepted) or ink (refused)",
+          "countedDots": "12 px dotOff, 15 px key once counted, 0.07 s apart; double-taps in pairs; refused knocks stay unlit",
+          "figures": "10 / 10 single taps found, 6 / 6 double-taps found, 0 / 12 knocks let through: constants in Diagrams.swift, not computed at render time"
+        },
+        "footage": {
+          "folder": "Video/footage (empty as recorded)",
+          "slots": [
+            {
+              "name": "A",
+              "start": 11.8,
+              "duration": 6.5,
+              "title": "Over the shoulder",
+              "status": "placeholder"
+            },
+            {
+              "name": "B",
+              "start": 25.9,
+              "duration": 6.5,
+              "title": "A real click",
+              "status": "placeholder"
+            }
+          ],
+          "files": "A or B as .mov, .mp4 or .m4v; optional music (.m4a, .mp3, .wav, .aiff, .aif, .flac); optional cuts.json for start times and which clips keep their sound",
+          "handling": "turned upright, scaled to fill 1620 x 912 with overflow cropped, converted to Rec. 709, kept in step with the film's clock; the last picture holds if the clip runs short",
+          "placeholderCard": "A production note, not a component: slot name, title, one sentence, and 'Footage to come, 6.5 seconds' on panel. Goes when the clips arrive."
+        },
+        "recordedMotion": {
+          "recording": "Packages/PointerKit/Tests/PointerKitTests/Fixtures/case-grip.trace",
+          "replayedBy": "Video/Sources/film/Take.swift, through the PointerKit engine",
+          "recorded": [
+            "aim: turn and tilt (pointer speed 0.3)",
+            "tap: two double-taps, then a single tap",
+            "jolt: one double-tap, a quiet hand, the case shifted in the grip"
+          ],
+          "handPosed": [
+            "opening turn and lid",
+            "the held pose under the callouts",
+            "the turn and tilt of the gravity chapter",
+            "the point on the third step",
+            "the end card's slow turn"
+          ]
+        },
+        "rules": [
+          {
+            "name": "The Only-The-Case-Is-Lit Rule",
+            "body": "No gradients, no glows, no shadows. Every surface the film draws is a flat fill or a stroke. The only shading in the frame is light on the 3D case (and whatever is in a filmed clip). Lit dots are marks, not glows."
+          },
+          {
+            "name": "The Case-Hangs Rule",
+            "body": "With no contact shadow the case is not standing on anything, and it is not drawn as if it were. It is placed by where the chapter needs it, and it may cross the horizon."
+          },
+          {
+            "name": "The Case-Travels Rule",
+            "body": "The case is in the frame whenever the film is drawing. It moves between placements on `glide`; it is never faded, cut to, or cut away from. A move that cannot be shown happens behind a clip."
+          },
+          {
+            "name": "The Complete-Card Rule",
+            "body": "The first frame and the last frame are complete, legible cards, because they are what a player shows when the film is not playing."
+          },
+          {
+            "name": "The 32 Rule",
+            "body": "Nothing is set smaller than 32 px. Embedded in a web page the film is shown at under half its size, and 32 is the least that still reads there."
+          },
+          {
+            "name": "The Measured-On-Dots Rule",
+            "body": "Anything measured (the cursor, the signal, a count) is shown on a dot-matrix display of the one kind, not on a line chart or a bar."
+          },
+          {
+            "name": "The Replayed-Not-Animated Rule",
+            "body": "Motion presented as real is a recording replayed through the app's engine. Hand-posed motion is used only to explain, and is never captioned as real."
+          },
+          {
+            "name": "The Opaque-Clip Rule",
+            "body": "A clip's frame opens from a line and closes to one, between the margins, and is opaque throughout. The stage is never seen through it or dissolved into it."
+          }
+        ],
+        "dos": [
+          "Do take every colour and text style from `Look`, and every time from `At`.",
+          "Do start every text block at the 150 px margin and keep the case to the right of it.",
+          "Do bring a headline in with `reveal` and everything else that is text with `lift`.",
+          "Do move the case with a new placement and a `glide`, starting just before the chapter that needs it.",
+          "Do show a new measurement on a dot display with the shared face, the screen's dot spacing, and `key` for what was counted.",
+          "Do cut real motion from the recording with `Take.cut`, and say on screen that it is a recording.",
+          "Do re-read the first and last frames after any change to the opening or the end.",
+          "Do keep each chapter to one headline and at most two sentences."
+        ],
+        "donts": [
+          "Don't add a gradient, a glow, a shadow or a blur to anything the film draws, including the dot screen's glow and the contact shadow from the app.",
+          "Don't stand the case on the floor or give it a ground to sit on.",
+          "Don't fade the case in or out, or cut between two views of it.",
+          "Don't set anything smaller than 32 px, or shrink a label to make it fit.",
+          "Don't let anything show through the clip frame, or cross-dissolve into a clip.",
+          "Don't animate by hand something the film presents as the engine's output: a cursor path, a tap, a verdict.",
+          "Don't add a second accent, or use `key` for decoration; it marks what is lit, live or counted.",
+          "Don't treat the placeholder card as a component, or describe the clips, the sound or the chapter order as settled until the user has supplied or confirmed them."
+        ],
+        "notCanonized": [
+          "The placeholder card and its 'Clip A' line in key above the title: a production note that goes when the clips arrive."
+        ]
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled capsule: the one thing to do next in its group. Regular size shown (38 pt); small is 30 pt, large 48 pt.",
+      "html": "<button class=\"ds-pill-primary\">Record the stream</button>",
+      "css": ".ds-pill-primary { font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 15px; font-weight: 600; height: 38px; padding: 0 20px; border-radius: 9999px; cursor: pointer; white-space: nowrap; transition: transform 0.18s ease-out, filter 0.18s ease-out, box-shadow 0.18s ease-out, background 0.18s ease-out, color 0.18s ease-out; } .ds-pill-primary:active { transform: scale(0.97); } .ds-pill-primary:disabled { opacity: 0.45; } .ds-pill-primary:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; } .ds-pill-primary { background: #0B74B4; color: #FFFFFF; border: none; box-shadow: 0 2px 8px rgba(31,42,54,0.16); } .ds-pill-primary:hover { filter: brightness(1.07); box-shadow: 0 3px 14px rgba(31,42,54,0.16); } .ds-pill-primary:active { filter: brightness(0.94); }"
+    },
+    {
+      "name": "Secondary Pill",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White capsule with a keyline outline: everything else that acts.",
+      "html": "<button class=\"ds-pill-secondary\">Open Bluetooth</button>",
+      "css": ".ds-pill-secondary { font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 15px; font-weight: 600; height: 38px; padding: 0 20px; border-radius: 9999px; cursor: pointer; white-space: nowrap; transition: transform 0.18s ease-out, filter 0.18s ease-out, box-shadow 0.18s ease-out, background 0.18s ease-out, color 0.18s ease-out; } .ds-pill-secondary:active { transform: scale(0.97); } .ds-pill-secondary:disabled { opacity: 0.45; } .ds-pill-secondary:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; } .ds-pill-secondary { background: #FFFFFF; color: #0B74B4; border: none; box-shadow: inset 0 0 0 1.5px #2FA8E6, 0 1px 4px rgba(31,42,54,0.06); } .ds-pill-secondary:hover { background: #DDF0FB; box-shadow: inset 0 0 0 2.5px #2FA8E6, 0 3px 12px rgba(31,42,54,0.12); } .ds-pill-secondary:active { background: #CDE9F9; }"
+    },
+    {
+      "name": "Quiet Pill",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Label only: the least important action in a group. Small size shown.",
+      "html": "<button class=\"ds-pill-quiet\">Skip setup</button>",
+      "css": ".ds-pill-quiet { font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 15px; font-weight: 600; height: 38px; padding: 0 20px; border-radius: 9999px; cursor: pointer; white-space: nowrap; transition: transform 0.18s ease-out, filter 0.18s ease-out, box-shadow 0.18s ease-out, background 0.18s ease-out, color 0.18s ease-out; } .ds-pill-quiet:active { transform: scale(0.97); } .ds-pill-quiet:disabled { opacity: 0.45; } .ds-pill-quiet:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; } .ds-pill-quiet { font-size: 13px; height: 30px; padding: 0 14px; background: transparent; color: #566575; border: none; } .ds-pill-quiet:hover { color: #1F2A36; background: rgba(211,220,229,0.6); }"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "button-large",
+      "description": "Four large pills (48 pt). The selected one is primary; Setup carries an amber dot when the user must fix something.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-on\">Feel</button><button class=\"ds-tab\">Taps</button><button class=\"ds-tab\">Setup<i class=\"ds-tab-badge\"></i></button><button class=\"ds-tab\">Signal</button></nav>",
+      "css": ".ds-tabs { display: flex; gap: 12px; justify-content: center; padding: 8px 0 14px; } .ds-tab { position: relative; font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 15px; font-weight: 600; height: 48px; min-width: 148px; padding: 0 28px; border-radius: 9999px; border: none; background: #FFFFFF; color: #0B74B4; box-shadow: inset 0 0 0 1.5px #2FA8E6, 0 1px 4px rgba(31,42,54,0.06); cursor: pointer; transition: transform 0.18s ease-out, background 0.18s ease-out, box-shadow 0.18s ease-out; } .ds-tab:hover { transform: scale(1.035); background: #DDF0FB; box-shadow: inset 0 0 0 2.5px #2FA8E6, 0 3px 12px rgba(31,42,54,0.12); } .ds-tab:active { transform: scale(0.97); } .ds-tab:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; } .ds-tab-on, .ds-tab-on:hover { background: #0B74B4; color: #FFFFFF; box-shadow: 0 2px 8px rgba(31,42,54,0.16); } .ds-tab-badge { position: absolute; top: 9px; right: 34px; width: 9px; height: 9px; border-radius: 50%; background: #A85A07; }"
+    },
+    {
+      "name": "Power Switch",
+      "kind": "custom",
+      "refersTo": "power-switch-on",
+      "description": "The master switch: a wide capsule that says which way it is set. On shown; off is a hairline track with the thumb at the left and 'Off' in soft ink.",
+      "html": "<button class=\"ds-power\" role=\"switch\" aria-checked=\"true\"><span>On</span><i></i></button>",
+      "css": ".ds-power { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 4px; border: none; border-radius: 9999px; background: #0B74B4; color: #FFFFFF; font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.18s ease-out; } .ds-power span { padding-left: 14px; } .ds-power i { width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(31,42,54,0.2); } .ds-power:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Panel with slider row",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The one container: white, 22 pt continuous corners, keyline outline at 70%. Shown with its opening sentence and a slider row (the app uses the native slider, tinted action).",
+      "html": "<section class=\"ds-panel\"><h2>How the cursor answers your hand</h2><div class=\"ds-row\"><div class=\"ds-row-top\"><b>Speed</b><span>1.0\u00d7</span></div><div class=\"ds-row-mid\"><small>Slow</small><input type=\"range\" min=\"0.4\" max=\"2.5\" step=\"0.1\" value=\"1\"><small class=\"ds-right\">Fast</small></div><small>How far the cursor goes for the same turn of the wrist.</small></div></section>",
+      "css": ".ds-panel { width: 448px; max-width: 100%; padding: 22px; border-radius: 22px; background: #FFFFFF; color: #1F2A36; box-shadow: inset 0 0 0 1px rgba(47,168,230,0.7), 0 8px 32px rgba(31,42,54,0.10); font-family: system-ui, -apple-system, \"SF Pro Text\", sans-serif; } .ds-panel h2 { margin: 0 0 15px; font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 20px; font-weight: 700; } .ds-row { display: flex; flex-direction: column; gap: 4px; } .ds-row-top { display: flex; justify-content: space-between; align-items: baseline; } .ds-row-top b { font-size: 14px; font-weight: 600; } .ds-row-top span { font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: #0B74B4; } .ds-row-mid { display: flex; align-items: center; gap: 8px; } .ds-row-mid input { flex: 1; accent-color: #0B74B4; } .ds-row small { font-size: 12.5px; color: #566575; } .ds-row-mid small { width: 46px; } .ds-right { text-align: right; }"
+    },
+    {
+      "name": "Checklist Row",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "One requirement in Setup: its state, what it is, the one pill that fixes it, and the explanation beneath. Shown in the needs-you state, the only use of warn.",
+      "html": "<div class=\"ds-check\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-label=\"Needs attention\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"#A85A07\"/><rect x=\"10.9\" y=\"6\" width=\"2.2\" height=\"8\" rx=\"1.1\" fill=\"#fff\"/><circle cx=\"12\" cy=\"17.2\" r=\"1.3\" fill=\"#fff\"/></svg><div><div class=\"ds-check-top\"><b>Move the pointer and click</b><button>Allow\u2026</button></div><small>Switch AirPointer on in Privacy &amp; Security, under Accessibility.</small></div></div>",
+      "css": ".ds-check { display: flex; gap: 12px; align-items: flex-start; width: 404px; max-width: 100%; color: #1F2A36; font-family: system-ui, -apple-system, \"SF Pro Text\", sans-serif; } .ds-check svg { margin-top: 4px; flex: none; } .ds-check > div { flex: 1; display: flex; flex-direction: column; gap: 2px; } .ds-check-top { display: flex; justify-content: space-between; align-items: center; min-height: 30px; } .ds-check b { font-size: 14px; font-weight: 600; } .ds-check small { font-size: 12.5px; color: #566575; } .ds-check button { font-family: ui-rounded, \"SF Pro Rounded\", system-ui, sans-serif; font-size: 13px; font-weight: 600; height: 30px; padding: 0 14px; border: none; border-radius: 9999px; background: #0B74B4; color: #FFFFFF; box-shadow: 0 2px 8px rgba(31,42,54,0.16); cursor: pointer; transition: filter 0.18s ease-out, transform 0.18s ease-out; } .ds-check button:hover { filter: brightness(1.07); } .ds-check button:active { transform: scale(0.97); filter: brightness(0.94); } .ds-check button:focus-visible { outline: 3px solid rgba(47,168,230,0.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Dot Screen",
+      "kind": "custom",
+      "refersTo": "dot-screen",
+      "description": "Signature: a dot-matrix miniature of the real display with the cursor lit. Shown live (keyline outline and glow); not live it has a hairline outline and no glow. A static approximation of a 60 fps canvas.",
+      "html": "<div class=\"ds-screen\"><div class=\"ds-screen-dots\"></div><i class=\"ds-screen-lit\"></i></div>",
+      "css": ".ds-screen { position: relative; width: 360px; max-width: 100%; height: 244px; padding: 14px; box-sizing: border-box; border-radius: 20px; background: #FFFFFF; box-shadow: inset 0 0 0 1.5px #2FA8E6, 0 0 28px rgba(47,168,230,0.32), 0 6px 24px rgba(31,42,54,0.10); } .ds-screen-dots { width: 100%; height: 100%; background-image: radial-gradient(circle, #CBD5DE 1.5px, transparent 1.9px); background-size: 8.3px 8.3px; } .ds-screen-lit { position: absolute; left: 96px; top: 150px; width: 7px; height: 7px; border-radius: 50%; background: #2FA8E6; box-shadow: 8.3px 0 0 -0.5px #2FA8E6, -8.3px 0 0 -1px rgba(47,168,230,0.7), 0 8.3px 0 -1px rgba(47,168,230,0.7), 0 -8.3px 0 -1px rgba(47,168,230,0.7), 8.3px 8.3px 0 -1.5px rgba(47,168,230,0.5), 0 0 0 3px rgba(47,168,230,0.16); }"
+    },
+    {
+      "name": "Tap Dots",
+      "kind": "chip",
+      "refersTo": "dot-screen",
+      "description": "The picture of a tap count, used wherever a gesture is named.",
+      "html": "<div class=\"ds-gesture\"><span class=\"ds-dots\"><i></i><i></i></span>Click</div>",
+      "css": ".ds-gesture { display: flex; align-items: center; gap: 8px; font-family: system-ui, -apple-system, \"SF Pro Text\", sans-serif; font-size: 14px; color: #1F2A36; } .ds-dots { display: inline-flex; gap: 5px; width: 58px; } .ds-dots i { width: 9px; height: 9px; border-radius: 50%; background: #2FA8E6; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Room",
+    "overview": "The window is a small room. A dot-matrix screen hangs on a pale wall, the AirPods case stands on the floor beneath it, and the dot being aimed is lit on that screen. Everything is a mirror of the hand: the case on screen turns as the real one turns, the lit dot is the real cursor, and a tap answers twice at once, as a ring spreading from behind the case and a ring of dots on the screen. The app's settings are not a sidebar of grouped rows; they are four large pills along the bottom, each opening one white panel beside the stage.\n\nThe materials are few. The room is cool matte white by day and deep blue-black at night. One sky-blue keyline outlines what can be acted on and lights what is live. Forms are pebbles: capsules, a 22 pt continuous-corner panel, round dots. The only glossy object is the case, rendered in 3D with physically based white plastic; everything drawn in SwiftUI is flat and matte. Targets are large, because the pointer being configured is often the one doing the clicking, from arm's length.\n\nIt is a tool to be opened, tuned and closed. Text says what is happening and the physical thing to do about it, in a rounded display line and one plain line under it.",
+    "keyCharacteristics": [
+      "A stage (screen over case over status line) that is the whole idea in one picture; panels open beside it, never over it.",
+      "One accent in two strengths: `keyline` for outlines and lit things, `action` for fills and accent text.",
+      "Capsule pills at three heights (30, 38, 48 pt), outlined in the keyline.",
+      "A dot-matrix miniature of the real display, 40 by 26 dots, showing the real cursor.",
+      "One glossy object, the case, white in both appearances.",
+      "Native Mac controls (slider, switch, segmented picker) tinted with `action`, not redrawn.",
+      "Motion only as an answer to state: a tap, a lid, a panel, a switch."
+    ],
+    "rules": [
+      {
+        "name": "The One Colour Rule",
+        "body": "There is one accent hue. `keyline` draws lines and lit things; `action` fills controls and colours text. A second hue is never added for emphasis, category or decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Only-You-Can-Fix-It Rule",
+        "body": "`warn` marks a thing only the user can fix (a permission, Automatic Ear Detection). It is never decorative, never a generic \"notice\", and never used for a state that fixes itself, which is shown in `ink-soft` as waiting.",
+        "section": "colors"
+      },
+      {
+        "name": "The Outline-Not-Text Rule",
+        "body": "By day the keyline is too light for text. Anything that must be read in the accent uses `action`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Changing-Number Rule",
+        "body": "A number that can change on screen is set in `figure`, so its digits do not shift as it changes.",
+        "section": "typography"
+      },
+      {
+        "name": "The Panel-Says-What-It-Is-For Rule",
+        "body": "A panel opens with a plain sentence in `title` (\"How the cursor answers your hand\"), not a label and not the tab's name again.",
+        "section": "typography"
+      },
+      {
+        "name": "The Stage-Stays Rule",
+        "body": "The case and the screen stay in view whatever else is open. Controls go in the panel beside the stage; nothing covers it and nothing replaces it, including first-run setup.",
+        "section": "layout"
+      },
+      {
+        "name": "The Fit-First Rule",
+        "body": "A panel is composed to fit its height without scrolling. Where it cannot (Setup), the bottom edge fades to `panel` over 56 pt and a `chevron.compact.down` in `action` says there is more; both disappear at the end of the scroll.",
+        "section": "layout"
+      },
+      {
+        "name": "The Arm's-Length Rule",
+        "body": "Anything clicked often is large: tab pills are 48 pt high with a 92 pt minimum label, native sliders and segmented pickers use the large control size, and nothing needs a hover to be understood.",
+        "section": "layout"
+      },
+      {
+        "name": "The Dark-Shadow Rule",
+        "body": "A shadow is never the `ink` token, which turns pale at night. Use `Theme.shadow(strength)`, which is dark in both appearances.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Glow Rule",
+        "body": "The only glow around a surface is the dot screen's: keyline-coloured, and present only while the pointer is live. Lit dots, the case's status light and the tap rings are lit marks, not glows; no other surface gets a coloured halo.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Glossy-Object Rule",
+        "body": "Nothing drawn by the app is glossy except the case. No sheen, glass or specular highlight on pills, panels or the screen. Native controls keep whatever material the system gives them.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every colour from `Theme` and every text style from `Typo`; both appearances come with the token.",
+      "Do use `keyline` for outlines and lit things and `action` for fills and accent text.",
+      "Do make the next step a primary pill, other actions secondary pills, and the least important one quiet; one primary per group.",
+      "Do put new controls in a panel beside the stage, opening with a `title` sentence and separated into groups by a title and a hairline.",
+      "Do use native sliders, switches and segmented pickers at the large size, tinted `action`.",
+      "Do set every changing number in `figure`.",
+      "Do cast shadows with `Theme.shadow(strength)`, soft and straight down.",
+      "Do show the case asleep by a shut lid and an unlit status light, and keep it white in both appearances.",
+      "Do tie every animation to a change of state, on `quick` or `settle`, with a fade in its place under Reduce Motion.",
+      "Do say what is wrong and the physical fix, in the status line or the row's caption."
+    ],
+    "donts": [
+      "Don't build a Settings sidebar of grouped rows, or box groups inside the panel.",
+      "Don't add a second accent hue, or use `warn` for anything the user cannot fix themselves.",
+      "Don't use the `ink` token as a shadow colour.",
+      "Don't add a glow to anything but the live dot screen.",
+      "Don't make anything glossy except the case: no sheen, glass or highlight on pills, panels or the screen.",
+      "Don't dim or tint the case to show a state.",
+      "Don't set text in `keyline` by day.",
+      "Don't let a panel scroll when it could be made to fit; where it must, keep the fade and the chevron.",
+      "Don't add idle or decorative motion, or bounce.",
+      "Don't cover the stage or make anything depend on hover to be understood."
+    ]
+  }
+}
