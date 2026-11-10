@@ -91,3 +91,46 @@ const smallHoles = (x, y, z) => {
   return Math.max(d, y - (-DIM.H + 1.1))
 }
 
+// --- How an AirPod sits in the case ----------------------------------------------------
+
+// An AirPod has its own axes: origin at the foot of the stem, y up the stem, x toward the
+// ear tip, z toward the face that carries the black sensor window. In the left well the tip
+// points right (toward the middle) and the stem leans back a little.
+const LEAN = -8 * Math.PI / 180
+export const BUD_HOME = { x: -24.3, y: -10.42, z: 2.7, lean: LEAN }
+
+/// A point of the left AirPod, from its own axes into the case's.
+function budToCase(px, py, pz) {
+  const c = Math.cos(LEAN), s = Math.sin(LEAN)
+  return [BUD_HOME.x + px, BUD_HOME.y + py * c - pz * s, BUD_HOME.z + py * s + pz * c]
+}
+/// A point in the case's axes, into the left AirPod's own.
+function caseToBud(x, y, z) {
+  const c = Math.cos(LEAN), s = Math.sin(LEAN)
+  const qy = y - BUD_HOME.y, qz = z - BUD_HOME.z
+  return [x - BUD_HOME.x, qy * c + qz * s, -qy * s + qz * c]
+}
+
+const HEAD = { x: 5.6, y: 22.3, a: 8.9, b: 8.2, c: 7.7 }
+const TIP = (() => {
+  const down = -5 * Math.PI / 180, out = 6 * Math.PI / 180
+  return {
+    x: 13.0, y: 20.4, z: 0.3,
+    dx: Math.cos(down) * Math.cos(out), dy: Math.sin(down), dz: Math.cos(down) * Math.sin(out),
+    length: 9.5, bore: 2.15, boreFrom: 6.7,
+  }
+})()
+
+// The two wells in the body: a bore for the stem, a bowl for the head, a rest for the tip.
+const [boreFootX, boreFootY, boreFootZ] = budToCase(0, -0.7, 0)
+const [boreTopX, boreTopY, boreTopZ] = budToCase(0, 26, 0)
+const [bowlX, bowlY, bowlZ] = budToCase(HEAD.x, HEAD.y, 0)
+const [restX, restY, restZ] = budToCase(TIP.x + TIP.dx * 4.4, TIP.y + TIP.dy * 4.4, TIP.z + TIP.dz * 4.4)
+function wells(x, y, z) {
+  const ax = -Math.abs(x) // both wells, as the left one
+  const bore = capsule(ax, y, z, boreFootX, boreFootY, boreFootZ, boreTopX, boreTopY, boreTopZ, 3.75)
+  const bowl = ellipsoid(ax - bowlX, y - bowlY, z - bowlZ, 9.5, 8.9, 8.35)
+  const rest = ellipsoid(ax - restX, y - restY, z - restZ, 4.75, 6.5, 6.5)
+  return smin(smin(bore, bowl, 2.4), rest, 1.8)
+}
+
