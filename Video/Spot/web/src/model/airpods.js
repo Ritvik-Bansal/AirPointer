@@ -168,3 +168,27 @@ export function lid(x, y, z) {
   return d
 }
 
+/// The T of the hinge plate, and the bar seen at the back of the open body.
+export function hingeBody(x, y, z) {
+  const region = Math.max(hingeOutline(x, y, 0), Math.min(y - (SEAM - HINGE.slit), Math.abs(x) - (HINGE.tab - HINGE.slit)))
+  const plate = smax(smax(region, z - (-DIM.D + HINGE.depth - 0.03), 0.1), (-DIM.D + 0.025) - z, 0.14)
+  const bar = roundBox(x, y - (BODY_TOP - 0.75), z - (-DIM.D + 1.75), 9.4, 0.8, 0.42, 0.2)
+  return Math.min(plate, bar)
+}
+
+/// The two blocks of the hinge plate that belong to the lid, and the bar inside it.
+export function hingeLid(x, y, z) {
+  const region = Math.max(hingeOutline(x, y, 0), (SEAM + HINGE.slit) - y, (HINGE.tab + HINGE.slit) - Math.abs(x))
+  const plate = smax(smax(region, z - (-DIM.D + HINGE.depth - 0.03), 0.1), (-DIM.D + 0.025) - z, 0.14)
+  const bar = roundBox(x, y - (LID_BOTTOM + 1.05), z - (-DIM.D + 1.7), 13.2, 1.0, 0.42, 0.2)
+  return Math.min(plate, bar)
+}
+
+/// The lanyard plate.
+export function lanyard(x, y, z) {
+  const outline = stadium2(y - LANYARD.y, z, LANYARD.half, LANYARD.r)
+  let d = smax(smax(outline, x - (DIM.W - LANYARD.sink), 0.16), (DIM.W - LANYARD.depth + 0.03) - x, 0.1)
+  d = smax(d, -(lanyardHoles(y, z)), 0.22)
+  return d
+}
+
