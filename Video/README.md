@@ -37,3 +37,26 @@ Needs Xcode's command-line tools and ffmpeg (`brew install ffmpeg`). A render ta
 
 The first frame is the complete title card and the last is the end card, because those are what a player shows before and after it plays.
 
+## Putting your clips in
+
+Everything the film takes from outside goes in `Video/footage` (not kept in git):
+
+```
+Video/footage/A.mov        clip A  (.mov, .mp4 or .m4v)
+Video/footage/B.mov        clip B
+Video/footage/music.m4a    optional music (.m4a, .mp3, .wav, .aiff or .flac)
+Video/footage/cuts.json    optional, see below
+```
+
+Then run `Video/render.sh`. Each clip fills a 1620x912 frame for 6.5 seconds. It is cropped to fill, so film in landscape. Any size and frame rate will do; a clip filmed sideways is turned upright, and an HDR clip is converted to the ordinary range the way QuickTime shows it on an ordinary display.
+
+`cuts.json` says where in each file to start, in seconds, and whether a clip keeps its own sound:
+
+```json
+{ "A": 3.0, "B": { "in": 7.5, "sound": true }, "music": { "in": 12 } }
+```
+
+Without it, each clip and the music start at their beginning and the clips are silent. If a clip is shorter than its slot, its last frame holds.
+
+**Sound.** With no music file and no clip set to keep its sound, the film has no sound track at all, and is made to be understood that way: it is how GitHub and most portfolio pages play a video. With music, the mix is automatic: the music is brought to -16 LUFS, fades in over 1.2 s and out over the last 3 s, and steps back under any clip that keeps its sound.
+
