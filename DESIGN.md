@@ -443,3 +443,15 @@ The figures above the counted dots (10 / 10 single taps found, 6 / 6 double-taps
 - **Gravity diagram:** a dashed 2 px `soft` line straight down through the case with an arrowhead and the label "gravity", and two 3.5 px `key` arcs with arrowheads at both ends: one round the front of the case for turning ("left and right"), one up its side for tilting ("up and down"). An arc and its label are full strength only while the case is making that rotation.
 - **Steps:** a numeral in `key` and the step in `ink`, 30 px apart, arriving 1.2 s apart.
 
+### Recorded motion
+
+Motion that the film presents as real is real. The aiming, the taps and the stretch behind the signal display are cut from one recording of a hand holding the case (`Packages/PointerKit/Tests/PointerKitTests/Fixtures/case-grip.trace`) and played through the app's own engine (`Take.swift`): the pose of the case, the path of the cursor, each tap, each click and each refused knock are what the engine produced from that recording. The hand-turning band of the signal display is worked out in `Take.swift` by the same measure the engine's knock gate uses (mean turning speed over the half second before). The film says so on screen, in Small along the bottom: "Real motion, replayed through the app's own engine." and "One recorded session, replayed end to end."
+
+The pointer speed is turned down to 0.3 for the two aiming takes, because they were recorded with nothing on screen to aim at and sweep wide. Motion that explains instead of demonstrating is posed by hand and carries no such note: the opening turn, the held pose under the callouts, the turn and tilt of the gravity chapter, the point on the third step.
+
+### Footage slots
+
+Two stretches are given over to clips the user films: slot A at 11.8 s and slot B at 25.9 s, 6.5 s each. A clip is a file named `A` or `B` (`.mov`, `.mp4` or `.m4v`) in `Video/footage`. It is turned upright, scaled to fill the 1620 by 912 frame with the overflow cropped, converted to ordinary colour range and kept in step with the film's clock; if it runs short, its last picture holds. `cuts.json` in the same folder can say where each clip starts and whether it keeps its sound, and a file named `music` there is laid under the whole film.
+
+While a slot has no clip, its frame shows a card on `panel`, centred: the slot's name in Label and `key`, its title in bold rounded 60 px, one sentence saying what to film, and "Footage to come, 6.5 seconds". The card says outright that it is standing in for something, so a first cut is not mistaken for the finished film. It is a production note, not part of the film's design: it disappears when the clips arrive and nothing else should be built on it.
+
