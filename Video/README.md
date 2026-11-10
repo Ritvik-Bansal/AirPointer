@@ -60,3 +60,28 @@ Without it, each clip and the music start at their beginning and the clips are s
 
 **Sound.** With no music file and no clip set to keep its sound, the film has no sound track at all, and is made to be understood that way: it is how GitHub and most portfolio pages play a video. With music, the mix is automatic: the music is brought to -16 LUFS, fades in over 1.2 s and out over the last 3 s, and steps back under any clip that keeps its sound.
 
+## Filming the two clips
+
+Both clips, before you start:
+
+- **Landscape, and still.** Prop the phone on something or use a tripod. A locked-off shot is what makes it look edited rather than grabbed.
+- **Turn off HDR video** on an iPhone: Settings → Camera → Record Video → HDR Video. HDR clips are converted, but that path has only been tested with a synthetic clip.
+- **1080p or 4K, 60 fps if the phone offers it.** 30 fps is fine.
+- **Lock exposure on the Mac's screen.** In the Camera app, touch and hold on the screen until AE/AF Lock appears, then drag the sun down a little. Otherwise the screen burns out white.
+- **Light the hand.** A lamp on the hand's side and the Mac at about two thirds brightness lets the camera see both.
+- **Make the cursor big.** System Settings → Accessibility → Display → Pointer size, about halfway. A normal cursor is nearly invisible on phone footage.
+- **A plain, dark screen.** A solid dark wallpaper, Dock visible, nothing private open, and a Focus mode on so no notification arrives.
+- **Tap the back of the case**, lid open, AirPods in.
+- **Film far more than is needed**: 20 seconds or so per clip, repeating the action three or four times with a two-second pause between tries. The film uses the best 6.5 seconds.
+
+**Clip A, "Over the shoulder".** It follows "Aim it." and proves the cursor follows the case.
+Camera behind and a little above your shoulder, or beside you, so that your hand with the case sits in the lower part of the frame and the screen fills the rest. Focus on the screen.
+Hold still for two seconds. Move the cursor slowly all the way left, then right. Pause. Up, then down. Pause. One slow circle. Rest. One direction at a time, a second or two each; do not click.
+
+**Clip B, "A real click".** It follows "Tap it." and proves a tap clicks.
+Closer on the screen, with your hand and the case in a lower corner so the tapping finger can be seen.
+Pick something in the Dock whose window is large and comes up at once (open the app beforehand and close its window, so it does not have to launch). Start with the cursor a little way off. Bring it onto the icon, hold for a beat, tap twice, and keep still while the window opens. Repeat a few times, closing the window in between.
+If the room is quiet, the two taps can be heard in the finished film: set `"sound": true` for B.
+
+Optional: one unbroken take of 30 to 60 seconds of ordinary use (move, click, right-click, open something). It is not in this film, but it is what a longer cut for the portfolio would be made from.
+
