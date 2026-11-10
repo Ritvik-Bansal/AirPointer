@@ -264,3 +264,30 @@ function stage(ctx, t, dx, mini) {
   ctx.restore()
 }
 
+// --- The four pills --------------------------------------------------------------------
+
+function tabBar(ctx, t) {
+  const titles = ['Feel', 'Taps', 'Setup', 'Signal']
+  const chosen = t >= T.CLICKS[0]
+  titles.forEach((title, i) => {
+    const x = 126.4 + i * 160, y = 608, w = 147.2, h = 46.4
+    const selected = chosen && i === 0
+    // A pill gives a little under the click.
+    const squeeze = i === 0 && t >= T.CLICKS[0] && t < T.CLICKS[0] + 0.16 ? 1 - 0.035 * Math.sin((t - T.CLICKS[0]) / 0.16 * Math.PI) : 1
+    ctx.save()
+    ctx.translate(x + w / 2, y + h / 2)
+    ctx.scale(squeeze, squeeze)
+    roundRect(ctx, -w / 2, -h / 2, w, h, h / 2)
+    ctx.fillStyle = selected ? C.key : C.panel
+    ctx.fill()
+    if (!selected) {
+      roundRect(ctx, -w / 2 + 0.75, -h / 2 + 0.75, w - 1.5, h - 1.5, h / 2 - 0.75)
+      ctx.strokeStyle = C.key
+      ctx.lineWidth = 1.5
+      ctx.stroke()
+    }
+    text(ctx, title, 0, 0.5, `600 15px ${ROUND}`, selected ? C.onAction : C.key, 'center')
+    ctx.restore()
+  })
+}
+
