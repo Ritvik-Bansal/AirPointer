@@ -386,3 +386,31 @@ The same two faces as the app: SF Pro Rounded for headlines, labels and figures,
 - **Label** (`Look.label`, semibold rounded, 32 px): anything attached to a drawing: callouts, "gravity", "left and right", "up and down", "hand turning", "jolts", the verdicts under the signal display, the word in the tag on the screen.
 - **Small** (`Look.small`, regular, 32 px, `soft`): the note along the bottom saying how something was made, and "Tested with AirPods Pro 3 on macOS 27." on the end card.
 
+### Frame and layout
+
+- **Frame:** 1920 by 1080. The wall meets the floor at 742 px (68.7% of the height; the app's window puts it at 62.8%).
+- **Margin:** 150 px. Every text block starts at the left margin, and the clip frame and the signal display run from margin to margin (1620 px).
+- **Text, top-left:** the headline's top is 142 px down. Sentences follow 26 px under it. The results start 420 px down, the steps 330 px, the end card's address 296 px. A note sits at the left margin 84 px above the bottom edge.
+- **The case, right:** four placements, by centre and scale of a 1000 by 780 px render. *Hero* (1335, 630) at 1.0: the title, the sensors and gravity chapters, the steps, the end. *Under* (1390, 839) at 0.55: beneath the dot screen while it is aimed and tapped. *Aside* (1545, 322) at 0.5: top right, above the signal it is producing. *Beside* (1520, 600) at 0.5: to the right of the results.
+- **Dot screen:** 740 by 470 px, centred at (1390, 335), above the case's *under* placement.
+- **Signal display:** left edge at the margin, top at 556 px, 1620 px wide including the band labels to its left; the verdicts are written in the 62 px beneath it.
+- **Clip frame:** x 150, y 84, 1620 by 912 px: between the margins, 84 px clear top and bottom, and large enough to cover everything on the stage behind it.
+
+The left half is for reading and the right half is for the case; the two full-width pieces (the signal display, a clip) take the lower part of the frame or all of it.
+
+### Timeline
+
+| Starts (s) | Chapter | What is on screen |
+| --- | --- | --- |
+| 0.0 | Open | Title card. The case shut, at hero; the lid lifts from 0.6 s. |
+| 4.4 | Aim | The case moves under the dot screen, which draws on. A recorded turn left and right, then a tilt up and down, moves the lit dot. |
+| 11.8 | Clip A | "Over the shoulder", 6.5 s. Placeholder card. |
+| 18.3 | Tap | Two recorded double-taps, then a single tap: rings on the case and the screen, and a tag naming the result. |
+| 25.9 | Clip B | "A real click", 6.5 s. Placeholder card. |
+| 32.4 | Sensors | The case at hero, with two callouts. |
+| 39.2 | Gravity | The gravity line and two arcs drawn round the case as it is turned, then tilted. |
+| 47.6 | Jolt | The case aside, replaying a recorded stretch while the signal display fills. |
+| 57.2 | Proof | Three results with counted dots; the case beside them. The lid shuts at the end. |
+| 63.2 | Setup | Three numbered steps; the lid opens on the second and the case points on the third. |
+| 69.7 | End | End card, held to 75.9. |
+
