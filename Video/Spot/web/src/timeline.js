@@ -305,3 +305,26 @@ export const speed = t => lerp(1.0, SPEED_AFTER, outCubic(span(t, CLICKS[1] + 0.
 /// Whether the cursor is over a pill or a control (it is drawn pressed at a click).
 export const pressed = t => CLICKS.some(c => t >= c && t < c + 0.12)
 
+// --- The words -------------------------------------------------------------------------
+
+export const TITLES = [
+  // The first line is already there in the first frame: it is what a player shows as the
+  // poster, and it is what says whose case this is.
+  { from: -1, to: 5.0, head: 'Your AirPods case', sub: null },
+  { from: 3.25, to: 5.0, head: 'is a pointer.', sub: null, line: 1 },
+  { from: 6.3, to: 11.9, head: 'Aim it.', sub: 'The cursor follows your hand.' },
+  { from: 14.5, to: 18.3, head: 'Tap it.', sub: 'Two taps on the back click.' },
+  { from: 19.9, to: 24.0, head: 'Tune it.', sub: 'Speed, flick and steadiness,', sub2: 'set to your hand.', side: 'right' },
+]
+export const END = {
+  from: CUE.endCard,
+  name: 'AirPointer',
+  line: 'Your AirPods case, as a pointer for the Mac.',
+}
+
+/// How far the studio is turned about the case, in degrees. Turning it walks the reflected
+/// band of light across the case's flat face: on from the left as the film opens and off to
+/// the right just before the lid lifts; held clear through the middle; and brought back for
+/// the end card, where it drifts.
+const turn = track([[0, 0.8], [2.6, 11.2], [12, 19], [24, 19], [26.6, -5], [30, -6.2]])
+export const lightTurn = t => turn(t)
