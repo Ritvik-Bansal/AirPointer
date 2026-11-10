@@ -158,6 +158,23 @@ final class Film {
         return plan
     }
 
+    // MARK: The frame
+
+    func frame(at t: Double) -> some View {
+        let slot = Self.slots.first { t >= $0.start && t < $0.start + $0.duration }
+        return ZStack {
+            Room()
+            stage(t)
+            text(t)
+            extras(t)
+            if let slot {
+                FootageView(slot: slot, image: footage.image(slot, at: t - slot.start, fps: Self.fps), local: t - slot.start)
+            }
+        }
+        .frame(width: Look.size.width, height: Look.size.height)
+        .environment(\.colorScheme, .dark)
+    }
+
 }
 
 extension Take {
