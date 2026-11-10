@@ -108,3 +108,47 @@ struct DotScreen: View {
     }
 }
 
+/// The left-hand text of a chapter: a headline, a sentence or two under it, and an optional small note.
+struct ChapterText: View {
+    let t: Double
+    let cue: Cue
+    var headline: [String]
+    var bodyText: String?
+    var headlineSize: CGFloat = 72
+    var width: CGFloat = 800
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(headline.enumerated()), id: \.offset) { index, line in
+                Text(line)
+                    .font(Look.headline(headlineSize))
+                    .tracking(-headlineSize * 0.012)
+                    .foregroundStyle(Look.ink)
+                    .fixedSize()
+                    .reveal(t, cue, delay: Double(index) * 0.09)
+            }
+            if let bodyText {
+                Text(bodyText)
+                    .font(Look.sub)
+                    .foregroundStyle(Look.soft)
+                    .lineSpacing(9)
+                    .frame(width: width, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 26)
+                    .lift(t, cue, delay: 0.22 + Double(headline.count) * 0.09)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.leading, Look.margin)
+        .padding(.top, 142)
+    }
+}
+
+extension View {
+    /// A short rise and fade, for sentences: quieter than the headline's reveal.
+    func lift(_ t: Double, _ cue: Cue, delay: Double = 0) -> some View {
+        let shifted = Cue(start: cue.start + delay, end: cue.end)
+        let a = shifted.arrive(t, over: 0.6)
+        return self.offset(y: (1 - a) * 16).opacity(span(t, from: shifted.start, over: 0.35) * (1 - shifted.leave(t)))
+    }
+}
