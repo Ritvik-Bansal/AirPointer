@@ -8,3 +8,7 @@ xcuserdata/
 .impeccable/mocks/
 .impeccable/review/
 .impeccable/questions/
+
+# The film: what is rendered, and the phone clips and music that go into it.
+Video/out/
+Video/footage/
