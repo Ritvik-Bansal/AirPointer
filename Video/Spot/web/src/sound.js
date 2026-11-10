@@ -189,6 +189,82 @@ export async function renderSound() {
     osc.stop(t + 0.36)
   }
 
+  // --- Effects -------------------------------------------------------------------------
+
+  /// Moving air: band-passed noise that swells and passes, its pitch and place sliding.
+  function air(from, length, { low = 300, high = 1600, gain = 0.2, pan = [0, 0], peak = 0.5, q = 0.9 } = {}) {
+    const src = ctx.createBufferSource()
+    src.buffer = noise
+    src.loop = true
+    const band = ctx.createBiquadFilter()
+    band.type = 'bandpass'
+    band.Q.value = q
+    band.frequency.setValueAtTime(low, from)
+    band.frequency.exponentialRampToValueAtTime(high, from + length * peak)
+    band.frequency.exponentialRampToValueAtTime(low * 0.8, from + length)
+    const level = quiet()
+    level.gain.setValueAtTime(0, from)
+    level.gain.linearRampToValueAtTime(gain, from + length * peak)
+    level.gain.linearRampToValueAtTime(0, from + length)
+    const place = ctx.createStereoPanner()
+    place.pan.setValueAtTime(pan[0], from)
+    place.pan.linearRampToValueAtTime(pan[1], from + length)
+    src.connect(band).connect(level).connect(place)
+    send(place, 1, 0.35)
+    src.start(from, random() * 2)
+    src.stop(from + length + 0.05)
+  }
+
+  /// A short tone that falls or rises: used for thumps and blips.
+  function tone(at, { from, to = from, length, gain, type = 'sine', attack = 0.004, dry = 1, space = 0.2, pan = 0 }) {
+    const osc = ctx.createOscillator()
+    osc.type = type
+    osc.frequency.setValueAtTime(from, at)
+    if (to !== from) osc.frequency.exponentialRampToValueAtTime(to, at + length)
+    const level = quiet()
+    level.gain.setValueAtTime(0, at)
+    level.gain.linearRampToValueAtTime(gain, at + attack)
+    level.gain.exponentialRampToValueAtTime(0.0002, at + length)
+    osc.connect(level)
+    send(panned(level, pan), dry, space)
+    osc.start(at)
+    osc.stop(at + length + 0.02)
+  }
+
+  /// A burst of filtered noise: the grain in a click or a knock.
+  function grit(at, { centre, q = 1.2, length, gain, pan = 0, space = 0.15 }) {
+    const src = ctx.createBufferSource()
+    src.buffer = noise
+    const band = ctx.createBiquadFilter()
+    band.type = 'bandpass'
+    band.frequency.value = centre
+    band.Q.value = q
+    const level = quiet()
+    level.gain.setValueAtTime(0, at)
+    level.gain.linearRampToValueAtTime(gain, at + 0.0015)
+    level.gain.exponentialRampToValueAtTime(0.0002, at + length)
+    src.connect(band).connect(level)
+    send(panned(level, pan), 1, space)
+    src.start(at, random() * 3)
+    src.stop(at + length + 0.02)
+  }
+
+  /// A fingertip on the case: a soft knock on hollow plastic.
+  function tap(at, second) {
+    const pitch = second ? 1.06 : 1
+    grit(at, { centre: 2600, q: 0.8, length: 0.018, gain: 0.26, pan: 0.2 })
+    tone(at, { from: 470 * pitch, to: 400 * pitch, length: 0.085, gain: 0.3, pan: 0.2, space: 0.25 })
+    tone(at, { from: 1180 * pitch, to: 1100 * pitch, length: 0.03, gain: 0.1, pan: 0.2, space: 0.2 })
+    tone(at, { from: 190, to: 150, length: 0.06, gain: 0.16, pan: 0.2, space: 0.1 })
+  }
+
+  /// What the Mac makes of it: a small bright click.
+  function click(at) {
+    tone(at, { from: 1760, length: 0.05, gain: 0.12, space: 0.5, pan: -0.25 })
+    tone(at + 0.004, { from: 2637, length: 0.03, gain: 0.06, space: 0.5, pan: -0.25 })
+    grit(at, { centre: 5200, q: 1.5, length: 0.012, gain: 0.08, pan: -0.25 })
+  }
+
   const rendered = await ctx.startRendering()
   return wav(rendered)
 }
