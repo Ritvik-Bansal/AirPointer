@@ -85,3 +85,23 @@ If the room is quiet, the two taps can be heard in the finished film: set `"soun
 
 Optional: one unbroken take of 30 to 60 seconds of ordinary use (move, click, right-click, open something). It is not in this film, but it is what a longer cut for the portfolio would be made from.
 
+## Finishing it
+
+1. Film clips A and B, put them in `Video/footage`, and run `Video/render.sh`. Choose the best 6.5 seconds of each with `cuts.json`.
+2. Confirm the order of the chapters, or change it. It was chosen while you were away: show it, prove it with a clip, twice, then explain. The order is the `At` enum at the top of `Sources/film/Film.swift`.
+3. Decide on sound. The film works silent. For music, pick a track you are licensed to publish with, save it as `Video/footage/music.m4a`, and render again.
+4. Create the repository. The end card says `github.com/Ritvik-Bansal/AirPointer`; if the repository is named anything else, change that one line in `Sources/film/main.swift` and render again.
+5. Put `out/airpointer-web.mp4` at the top of the repository's README by dragging it into the README editor on github.com, which turns it into a player. Use `out/airpointer.mp4` and the poster on the portfolio.
+
+## Changing it
+
+| To change | Look in |
+| --- | --- |
+| The order and length of chapters | `enum At` in `Film.swift` |
+| Any words on screen | `text(_:)` in `Film.swift`; the diagrams' labels in `Diagrams.swift` |
+| Which stretch of the recording plays | the `Take.cut` lines in `Film.init`. After a render, `~/Library/Caches/AirPointer/Film/release/film probe <phase> <offset> <seconds>` lists what a stretch holds |
+| Colours, type sizes, margin | `Look.swift` |
+| How things move | `Motion.swift` |
+| The case itself | `App/UI/CaseView.swift`, which the app shares |
+
+The rules the film keeps (flat colour, no gradients, glows or shadows, nothing set under 32 px, the case never faded) are written down in `DESIGN.md` at the project root.
