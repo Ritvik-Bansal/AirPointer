@@ -407,3 +407,46 @@ function feelPanel(ctx, t, open) {
   ctx.restore()
 }
 
+// --- The pointer and the ring a click draws round it -----------------------------------
+
+function clickRings(ctx, t) {
+  for (const click of T.CLICKS) {
+    const age = (t - click) / 0.46
+    if (age < 0 || age > 1) continue
+    const p = T.cursor(click)
+    const radius = 7 + 23 * T.settle(age)
+    const alpha = age < 0.12 ? age / 0.12 : age < 0.45 ? 1 : 1 - (age - 0.45) / 0.55
+    ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * alpha})`
+    ctx.lineWidth = 5
+    ctx.stroke()
+    ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+    ctx.strokeStyle = rgba(C.key, alpha)
+    ctx.lineWidth = 2.5
+    ctx.stroke()
+  }
+}
+
+function pointer(ctx, t) {
+  const p = T.cursor(t)
+  ctx.save()
+  ctx.translate(p.x, p.y)
+  // Drawn large, as with the system's pointer-size setting turned up.
+  ctx.scale(2.5, 2.5)
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(0, 16.2)
+  ctx.lineTo(3.9, 12.7)
+  ctx.lineTo(6.3, 18.4)
+  ctx.lineTo(8.7, 17.4)
+  ctx.lineTo(6.3, 11.8)
+  ctx.lineTo(11.4, 11.6)
+  ctx.closePath()
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 2.1
+  ctx.strokeStyle = '#FFFFFF'
+  ctx.stroke()
+  ctx.fillStyle = '#0A0A0C'
+  ctx.fill()
+  ctx.restore()
+}
