@@ -226,3 +226,25 @@ export function bud(x, y, z) {
   return d
 }
 
+/// The silicone ear tip, in the AirPod's axes.
+export function tip(x, y, z) {
+  const sx = x - TIP.x, sy = y - TIP.y, sz = z - TIP.z
+  const along = sx * TIP.dx + sy * TIP.dy + sz * TIP.dz
+  const across = Math.sqrt(Math.max(sx * sx + sy * sy + sz * sz - along * along, 0))
+  // A dome: widest just off the base, closing toward the front.
+  const k0 = Math.hypot((along - 2.2) / 9.2, across / 5.75)
+  const k1 = Math.hypot((along - 2.2) / 84.64, across / 33.06)
+  let d = k0 * (k0 - 1) / k1
+  d = smax(d, along - TIP.length, 1.0)
+  d = smax(d, 0.15 - along, 0.5)
+  d = smax(d, -Math.max(across - TIP.bore, TIP.boreFrom - along), 0.8)
+  return d
+}
+
+/// The dark mesh a little way down the tip's bore, as a centre and a facing direction.
+export const TIP_MESH = {
+  at: [TIP.x + TIP.dx * (TIP.boreFrom + 0.9), TIP.y + TIP.dy * (TIP.boreFrom + 0.9), TIP.z + TIP.dz * (TIP.boreFrom + 0.9)],
+  facing: [TIP.dx, TIP.dy, TIP.dz],
+  radius: TIP.bore + 0.3,
+}
+
