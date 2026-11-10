@@ -296,3 +296,12 @@ export function camera(t) {
   return { at, look, fov: camFov(t), focus, lens: camLens(t) / 1000 }
 }
 
+// --- What is on the screen -------------------------------------------------------------
+
+/// How far the Feel panel has slid in: 0 closed, 1 open.
+export const panelOpen = t => settle(span(t, CLICKS[0] + 0.03, 0.42))
+/// The Speed setting.
+export const speed = t => lerp(1.0, SPEED_AFTER, outCubic(span(t, CLICKS[1] + 0.03, 0.2)))
+/// Whether the cursor is over a pill or a control (it is drawn pressed at a click).
+export const pressed = t => CLICKS.some(c => t >= c && t < c + 0.12)
+
