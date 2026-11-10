@@ -164,3 +164,28 @@ FilmRenderer.prototype.pattern = function (count) {
   return this.patterns.get(count)
 }
 
+/// The numbers 0 to count - 1 in a fixed scrambled order.
+function shuffled(count, seed) {
+  const order = Array.from({ length: count }, (_, i) => i)
+  let a = seed >>> 0
+  const next = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  for (let i = count - 1; i > 0; i--) { const j = Math.floor(next() * (i + 1)); [order[i], order[j]] = [order[j], order[i]] }
+  return order
+}
+
+/// Points spread evenly over a disc (a sunflower), radius 1.
+function lensPattern(count) {
+  const points = []
+  for (let i = 0; i < count; i++) {
+    const r = Math.sqrt((i + 0.5) / count), a = i * GOLDEN
+    points.push([r * Math.cos(a), r * Math.sin(a)])
+  }
+  return points
+}
+
+function halton(index, base) {
+  let f = 1, r = 0
+  while (index > 0) { f /= base; r += f * (index % base); index = Math.floor(index / base) }
+  return r
+}
+
