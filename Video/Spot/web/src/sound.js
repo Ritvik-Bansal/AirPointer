@@ -265,6 +265,47 @@ export async function renderSound() {
     grit(at, { centre: 5200, q: 1.5, length: 0.012, gain: 0.08, pan: -0.25 })
   }
 
+  // The lid lifts: a small release, and the air it lets out.
+  grit(CUE.lidOpens + 0.03, { centre: 3200, q: 1, length: 0.022, gain: 0.16 })
+  tone(CUE.lidOpens + 0.03, { from: 180, to: 120, length: 0.09, gain: 0.2, space: 0.3 })
+  air(CUE.lidOpens, 0.85, { low: 500, high: 3200, gain: 0.07, peak: 0.35 })
+  // The light comes on.
+  tone(CUE.lightOn, { from: 1318.5, length: 0.5, gain: 0.035, attack: 0.02, dry: 0.4, space: 1 })
+  tone(CUE.lightOn + 0.09, { from: 1975.5, length: 0.6, gain: 0.025, attack: 0.02, dry: 0.4, space: 1 })
+  // The screen wakes.
+  tone(CUE.screenWakes, { from: 110, to: 164.8, length: 1.3, gain: 0.1, attack: 0.5, space: 0.4 })
+  air(CUE.screenWakes, 1.5, { low: 700, high: 4200, gain: 0.05, peak: 0.6, pan: [-0.3, -0.1] })
+  // The camera pulls back over the case.
+  air(4.5, 1.4, { low: 260, high: 1100, gain: 0.11, peak: 0.45, pan: [0.3, -0.2] })
+  // Round the case: one long pass of air, left to right and back.
+  air(CUE.orbit[0] - 0.1, 1.5, { low: 240, high: 1900, gain: 0.2, peak: 0.6, pan: [-0.2, 0.75] })
+  air(CUE.orbit[0] + 1.1, 1.6, { low: 300, high: 2100, gain: 0.2, peak: 0.45, pan: [0.75, -0.6] })
+  tone(CUE.orbit[0] + 0.1, { from: 55, to: 82, length: 2.3, gain: 0.13, attack: 1.2, space: 0.2 })
+  // The taps and the clicks they make.
+  TAPS.forEach((at, i) => tap(at, i % 2 === 1))
+  CLICKS.forEach(at => click(at + 0.012))
+  // The panel slides in.
+  air(CLICKS[0] + 0.03, 0.5, { low: 900, high: 3600, gain: 0.06, peak: 0.3, pan: [0.1, -0.4], q: 1.4 })
+  // The slider knob runs to where it was clicked.
+  tone(CLICKS[1] + 0.03, { from: 587.3, to: 880, length: 0.24, gain: 0.05, attack: 0.02, space: 0.6, pan: -0.25 })
+  // In toward the screen, and away from it again.
+  air(17.3, 2.3, { low: 220, high: 900, gain: 0.1, peak: 0.55, pan: [0.3, -0.3] })
+  air(23.4, 1.9, { low: 240, high: 1300, gain: 0.13, peak: 0.5, pan: [-0.4, 0.2] })
+  // The lid shuts: it lands 0.42 s after it starts to fall.
+  const shut = CUE.lidShuts + 0.42
+  air(CUE.lidShuts, 0.42, { low: 1800, high: 500, gain: 0.04, peak: 0.8 })
+  grit(shut, { centre: 2200, q: 0.9, length: 0.03, gain: 0.3 })
+  tone(shut, { from: 150, to: 82, length: 0.16, gain: 0.34, space: 0.35 })
+  tone(shut + 0.002, { from: 620, to: 560, length: 0.05, gain: 0.1, space: 0.3 })
+  // The name: four notes rising out of the last chord, left to ring.
+  const chime = [65, 72, 77, 81]
+  chime.forEach((midi, i) => {
+    const at = CUE.endCard + i * 0.11
+    tone(at, { from: hz(midi), length: 2.6, gain: 0.075, attack: 0.008, dry: 0.7, space: 1, pan: (i - 1.5) * 0.18 })
+    tone(at, { from: hz(midi) * 2.003, length: 1.1, gain: 0.02, attack: 0.008, dry: 0.5, space: 1, pan: (i - 1.5) * 0.18 })
+  })
+  tone(CUE.endCard, { from: 43.65, to: 43.65, length: 2.6, gain: 0.2, attack: 0.35, space: 0.1 })
+
   const rendered = await ctx.startRendering()
   return wav(rendered)
 }
