@@ -414,3 +414,16 @@ The left half is for reading and the right half is for the case; the two full-wi
 | 63.2 | Setup | Three numbered steps; the lid opens on the second and the case points on the third. |
 | 69.7 | End | End card, held to 75.9. |
 
+### Motion
+
+Two curves, in `Motion.swift`, applied to a linear 0 to 1 span of time. `settle` (exponential ease-out, `1 - 2^(-10x)`) is for things arriving. `glide` (cubic ease in and out) is for things travelling and for lines drawing on. Neither overshoots. These are the film's own; they are not the app's `quick` and `settle`.
+
+- **Headlines rise from behind their baseline.** Each line is masked by its own frame and slides up into it from 105% of its height below, over 0.7 s on `settle`; a second line follows 0.09 s later. Nothing is seen below the line it will sit on.
+- **Sentences lift.** Sentences, labels, notes, steps and dots rise 16 px over 0.6 s on `settle` while fading in over 0.35 s. The sentence under a headline starts 0.22 s after the last headline line.
+- **Text leaves by fading** over the last 0.28 s of its cue, which ends 0.15 s before the next chapter (0.3 s on the title card).
+- **The case travels.** It moves between placements over 1.0 s on `glide`, changing place and scale together, starting 0.1 s before the chapter it is moving for (0.3 s before Aim). It is never faded and never cut. The one move nobody sees (from under the screen back to hero) happens behind the second clip, where the dot screen is taken down as well. A change of pose is blended on `glide` in the same way, and the lid shuts while the case is in place, not while it is travelling.
+- **Lines draw on.** A display's outline is traced round its edge and its face and dots then come up; a callout's line is drawn from the case outward over 0.55 s; the gravity line and each arc are drawn over 0.7 s, with arrowheads appearing as the line arrives.
+- **Drawings leave by fading** (the gravity diagram and the signal display, over 0.3 s). Only the case and the clip frame are barred from fading.
+- **The clip frame opens from a line.** It grows from a line across the middle of the frame to full height over 0.5 s on `glide` and closes back to it over the last 0.45 s of its slot. It is opaque from its first moment, so what is behind it is covered and never seen through it; the corner radius is 30 px, less while the frame is under 60 px tall.
+- **The first and last frames are complete cards.** A player shows the first frame before anyone presses play and is left showing the last. So the title and its sentence are already in place at 0.0 s and nothing arrives; the first thing to move is the lid. The end card's text arrives once and holds to the last frame, while the case turns a few degrees behind it. `render.sh` takes its poster from 3.2 s, the title card with the lid open.
+
