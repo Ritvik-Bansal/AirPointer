@@ -248,3 +248,35 @@ export const TIP_MESH = {
   radius: TIP.bore + 0.3,
 }
 
+// --- The black windows on an AirPod ----------------------------------------------------
+
+// Each is an ellipse laid on the head's surface: a centre on the surface, the direction it
+// faces, the direction of its long axis, and its two half-sizes. They are flush with the
+// head, so they are painted by the material (colour, finish and a fine groove at the edge)
+// rather than cut into the mesh, which keeps their edges sharp at any distance.
+function onCrown(px, py, sign) {
+  const t = 1 - ((px - HEAD.x) / HEAD.a) ** 2 - ((py - HEAD.y) / HEAD.b) ** 2
+  return sign * HEAD.c * Math.sqrt(Math.max(t, 0))
+}
+function crownNormal(px, py, pz) {
+  const n = [(px - HEAD.x) / HEAD.a ** 2, (py - HEAD.y) / HEAD.b ** 2, pz / HEAD.c ** 2]
+  const len = Math.hypot(...n)
+  return n.map(v => v / len)
+}
+function makeWindow(name, px, py, pz, long, a, b, finish) {
+  const normal = crownNormal(px, py, pz)
+  // Long axis: the given direction with its out-of-surface part removed.
+  const dot = long[0] * normal[0] + long[1] * normal[1] + long[2] * normal[2]
+  let u = [long[0] - normal[0] * dot, long[1] - normal[1] * dot, long[2] - normal[2] * dot]
+  const ul = Math.hypot(...u); u = u.map(v => v / ul)
+  const v = [normal[1] * u[2] - normal[2] * u[1], normal[2] * u[0] - normal[0] * u[2], normal[0] * u[1] - normal[1] * u[0]]
+  return { name, at: [px, py, pz], normal, u, v, a, b, finish }
+}
+export const WINDOWS = [
+  // The sensor window on the front of the head: glossy black, the one you see in the case.
+  makeWindow('sensor', 9.3, 27.5, onCrown(9.3, 27.5, 1), [0.82, -0.57, 0], 2.25, 1.5, 'gloss'),
+  // The vent on top.
+  makeWindow('top', 3.4, 30.2, onCrown(3.4, 30.2, -1) * 0.999, [0, 0, 1], 2.3, 1.05, 'mesh'),
+  // The long grille down the back of the head.
+  makeWindow('back', HEAD.x - HEAD.a * Math.sqrt(1 - ((24.2 - HEAD.y) / HEAD.b) ** 2 - 0.05), 24.2, -HEAD.c * Math.sqrt(0.05), [0, 1, 0], 4.3, 1.75, 'mesh'),
+]
