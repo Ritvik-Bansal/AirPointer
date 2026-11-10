@@ -135,6 +135,8 @@ Recorded from the built app (SwiftUI, AppKit, SceneKit; macOS 26 and later), not
 
 Reviewed in captures: the stage while pointing and while asleep, the Feel, Taps, Setup and Signal panels, the first step of first-run setup and the menu-bar panel, in a window that was not key. Recorded from source only, not seen in a capture: the Off, Paused and calibration states, controls in a key window (where the native slider and switch take the action blue instead of inactive grey), the click ring at the cursor, and all motion.
 
+A second surface, the film, was built later in the same world. It is recorded under "The Film" at the end of this file, which says where it departs from the app. Two details of the shared 3D case changed with it and are corrected below under "The case".
+
 ## Overview
 
 **Creative North Star: "The Living Room"**
@@ -332,4 +334,24 @@ Two curves. `quick` (ease-out, 0.18 s) for state changes on a control or a line 
 - **Don't** let a panel scroll when it could be made to fit; where it must, keep the fade and the chevron.
 - **Don't** add idle or decorative motion, or bounce.
 - **Don't** cover the stage or make anything depend on hover to be understood.
+
+## The Film
+
+A second surface in the same world: a film about AirPointer, 75.9 seconds at 60 frames a second, drawn frame by frame in SwiftUI by `Video/Sources/film` and written out by `Video/render.sh`. It is meant for the top of the README and the user's portfolio, where it is most often watched without sound in a player well under half its size. This section is recorded from that source and from sixteen stills of the rendered film (`.impeccable/review/film/`), not from a plan. The film's tokens live in `Video/Sources/film/Look.swift` as `Look`; the timeline is `enum At` in `Film.swift`. Every length in this section is a real pixel in a 1920 by 1080 frame (`render.sh --4k` scales the same layout to 3840 by 2160).
+
+Three things are not finished, and one is not confirmed:
+- **The two clips are placeholders.** `Video/footage` is empty, so both footage slots show a card saying what belongs there until the user films them.
+- **There is no sound.** The renderer can lay a music file under the film and keep a clip's own sound, but neither exists yet; the rendered files have a picture track only.
+- **The chapter order was the builder's choice.** Show, prove with a clip, twice, then explain: it was chosen while the user was away and awaits their confirmation. It is one enum (`At`).
+- The address on the end card (`github.com/Ritvik-Bansal/AirPointer`, passed in from `main.swift`) is not confirmed until the repository exists.
+
+Seen in the stills: every chapter, including the title card with the lid shut and open, the first clip's card opening and fully open, a tap ring on the case and on the screen, both halves of the gravity diagram, the signal display early and full, the results, the steps and the end card. Also checked in two frames taken from the rendered film: the second clip's card and the last frame. From source only: the timing of all motion and the case's moves between placements.
+
+### The room, flat
+
+The film is the app's room at night with everything but the case made flat. The wall and the floor are two solid tones meeting at a hard edge 742 px down the frame; there is no skirting line and neither tone is graded. The case is the app's own `CaseScene`, rendered in its Dark Mode lighting by `CaseRender.swift`, and it is the only thing in the frame with any shading.
+
+That is why three things the app's sections describe are absent here. The dot screen has no ambient shadow and no Screen glow: live, it is marked by its outline turning from hairline to keyline and nothing else. The case has no contact shadow, and so it does not stand on the floor: it hangs in the room, straddling the horizon at its large placement, and is free to travel to any part of the frame. Nothing else carries a shadow either.
+
+There is one room and one object. Whenever the film is drawing, the case is in the frame, and whatever is said about it is said beside it. It gives way only to the two clips, which open over it.
 
