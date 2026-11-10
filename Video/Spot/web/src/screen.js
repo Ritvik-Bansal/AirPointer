@@ -111,3 +111,47 @@ function measure(ctx, string, font) {
   return ctx.measureText(string).width
 }
 
+// --- The window ------------------------------------------------------------------------
+
+function windowFrame(ctx, W) {
+  ctx.save()
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.6)'
+  ctx.shadowBlur = 46 * UI.scale
+  ctx.shadowOffsetY = 20 * UI.scale
+  roundRect(ctx, 0, 0, W.w, W.h, 16)
+  ctx.fillStyle = C.stage
+  ctx.fill()
+  ctx.restore()
+}
+
+function room(ctx, W) {
+  // A wall and a floor a shade deeper, meeting behind the case (StageBackground).
+  const horizon = Math.round(W.h * 0.628)
+  ctx.fillStyle = C.stage
+  ctx.fillRect(0, 0, W.w, horizon)
+  ctx.fillStyle = C.floor
+  ctx.fillRect(0, horizon, W.w, W.h - horizon)
+  ctx.fillStyle = rgba(C.hairline, 0.9)
+  ctx.fillRect(70, horizon, W.w - 140, 1)
+}
+
+function topBar(ctx, W, t) {
+  const lights = ['#FF5F57', '#FEBC2E', '#28C840']
+  lights.forEach((color, i) => {
+    ctx.beginPath()
+    ctx.arc(16 + i * 23.2, 16, 6, 0, Math.PI * 2)
+    ctx.fillStyle = color
+    ctx.fill()
+  })
+  text(ctx, 'AirPointer', 92, 26.4, `600 14px ${ROUND}`, C.inkSoft)
+  // The power switch: on.
+  roundRect(ctx, 788, 11.2, 73.6, 30.4, 15.2)
+  ctx.fillStyle = C.key
+  ctx.fill()
+  text(ctx, 'On', 812.5, 26.8, `600 14px ${ROUND}`, C.onAction, 'center')
+  ctx.beginPath()
+  ctx.arc(845.6, 26.4, 12, 0, Math.PI * 2)
+  ctx.fillStyle = '#FFFFFF'
+  ctx.fill()
+}
+
