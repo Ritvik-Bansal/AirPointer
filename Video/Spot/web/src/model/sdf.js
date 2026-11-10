@@ -214,3 +214,51 @@ function gradient(field, x, y, z, h, out) {
   out[3] = (a + b + c + d) / 4
 }
 
+/// How open the sky is at each vertex, 0 (buried) to 1 (clear), measured against the field
+/// `occluder`. Thirteen cones, each stepped outward; a cone is closed off by how tightly the
+/// field pinches it. This is what darkens the wells, the seam and the join under an AirPod.
+export function ambient(positions, normals, occluder, { reach = 10 } = {}) {
+  const count = positions.length / 3
+  const out = new Uint8Array(count)
+  const steps = [0.35, 0.8, 1.6, 3.0, 5.2, reach].filter((t, i, all) => t <= reach || i === all.length - 1)
+  const tilt = 0.87, lift = 0.5 // side cones 60 degrees off the normal
+  const spread = 0.5 // a cone's half-width, as a fraction of its distance out
+  for (let v = 0; v < count; v++) {
+    const px = positions[v * 3], py = positions[v * 3 + 1], pz = positions[v * 3 + 2]
+    const nx = normals[v * 3], ny = normals[v * 3 + 1], nz = normals[v * 3 + 2]
+    // Tangent frame from a fixed axis: it varies smoothly over a surface (no seams), spinning
+    // only at the two points whose normal lies along the axis.
+    let ax = 0.36, ay = 0.86, az = 0.36
+    if (Math.abs(nx * ax + ny * ay + nz * az) > 0.985) { ax = 0.86; ay = -0.36; az = 0.36 }
+    let tx = ny * az - nz * ay, ty = nz * ax - nx * az, tz = nx * ay - ny * ax
+    const tl = Math.hypot(tx, ty, tz); tx /= tl; ty /= tl; tz /= tl
+    const ux = ny * tz - nz * ty, uy = nz * tx - nx * tz, uz = nx * ty - ny * tx
+    let open = 0, weight = 0
+    for (let c = 0; c < 13; c++) {
+      let dx = nx, dy = ny, dz = nz, w = 1
+      if (c > 0) {
+        // Two rings of six, the outer one turned half a step, so the result barely depends
+        // on which way the frame happens to face.
+        const outer = c > 6
+        const phi = (c - 1) * Math.PI / 3 + (outer ? Math.PI / 6 : 0)
+        const side = outer ? tilt : 0.5, along = outer ? lift : 0.866
+        const cu = Math.cos(phi) * side, cv = Math.sin(phi) * side
+        dx = nx * along + tx * cu + ux * cv
+        dy = ny * along + ty * cu + uy * cv
+        dz = nz * along + tz * cu + uz * cv
+        w = along
+      }
+      let vis = 1
+      for (const t of steps) {
+        const d = occluder(px + dx * t, py + dy * t, pz + dz * t)
+        const fade = 1 - 0.55 * (t / reach) // far walls count for less
+        vis = Math.min(vis, 1 - fade * (1 - Math.min(Math.max(d / (t * spread), 0), 1)))
+        if (vis <= 0.02) break
+      }
+      open += vis * w
+      weight += w
+    }
+    out[v] = Math.round(255 * Math.min(1, open / weight))
+  }
+  return out
+}
