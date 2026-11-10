@@ -205,3 +205,94 @@ export function casePose(t) {
 /// side the camera is on, so that the ring it sends out comes round into view.
 export const TAP_AT = { x: -17, y: -6 }
 
+// --- The camera ------------------------------------------------------------------------
+
+const rad = Math.PI / 180
+/// A point on a circle about the case: azimuth 0 is in front, positive toward the right.
+const orbit = (az, r, h) => [CASE[0] + r * Math.sin(az * rad), CASE[1] + h, CASE[2] + r * Math.cos(az * rad)]
+const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]
+const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+const toScreen = w => mix3(CASE, SCREEN.centre, w)
+const SLIDER_POINT = screenPoint(SPEED_TRACK[0], SPEED_TRACK[1] + 60)
+// Shot 4 holds the whole window, set to the left so the right of the picture is free for
+// the words: this is the point on the screen that sits in the middle of the frame.
+const WINDOW_VIEW = screenPoint(UI.window.x + 672, UI.window.y + 342)
+// A quarter of the way from the case to the screen. With the lens stopped down and the
+// focus set here, the case and the screen are both held: a tap and its click in one look.
+const MIDWAY = toScreen(0.25)
+/// A place in front of the screen: `out` metres off a point on it, a little left and above.
+function before(point, out) {
+  const d = [0, 1, 2].map(i => SCREEN.facing[i] - 0.17 * SCREEN.right[i] + 0.07 * SCREEN.up[i])
+  const n = Math.hypot(d[0], d[1], d[2])
+  return [point[0] + d[0] / n * out, point[1] + d[1] / n * out, point[2] + d[2] / n * out]
+}
+
+// Each key: time, where the camera is, what it looks at, field of view (degrees, vertical),
+// what is in focus ('case', 'screen', or a point), and the lens opening (its radius in mm).
+const KEYS = [
+  // 1 Reveal: a slow arc in on the closed case, rising as the lid opens.
+  { t: 0.0, at: orbit(-34, 0.305, 0.03), look: add3(CASE, [-0.036, 0.002, 0]), fov: 21, focus: 'case', lens: 1.6 },
+  { t: 2.4, at: orbit(-23, 0.262, 0.045), look: add3(CASE, [-0.031, 0.006, 0]), fov: 21, focus: 'case', lens: 1.6 },
+  { t: 3.9, at: orbit(-13, 0.255, 0.098), look: add3(CASE, [-0.022, 0.016, 0]), fov: 21.5, focus: 'case', lens: 1.8 },
+  { t: 4.8, at: orbit(-12, 0.30, 0.106), look: add3(toScreen(0.32), [-0.01, 0.01, 0]), fov: 23, focus: 'case', lens: 2.2 },
+  // 2 Aim: over the case to the screen, on a longer lens so the screen is large behind it
+  // and stopped down so the case in front stays readable as it turns.
+  { t: 5.9, at: orbit(-15, 0.40, 0.082), look: toScreen(0.66), fov: 20, focus: 'screen', lens: 1.1 },
+  { t: 9.0, at: orbit(-18, 0.385, 0.078), look: toScreen(0.66), fov: 20, focus: 'screen', lens: 1.1 },
+  { t: 11.7, at: orbit(-16, 0.36, 0.072), look: toScreen(0.6), fov: 20.5, focus: 'screen', lens: 1.1 },
+  // 3 Tap: once round the case, the long way: past its right side, low behind it to look
+  // up at the hinge, and round to land in front of its left side.
+  { t: 12.5, at: orbit(-4, 0.30, 0.056), look: toScreen(0.2), fov: 23, focus: 'case', lens: 2.2 },
+  { t: 12.9, at: orbit(34, 0.225, 0.036), look: CASE, fov: 24, focus: 'case', lens: 2.2 },
+  { t: 13.25, at: orbit(88, 0.195, 0.012), look: CASE, fov: 24, focus: 'case', lens: 2.2 },
+  { t: 13.6, at: orbit(146, 0.186, -0.04), look: add3(CASE, [0, 0.004, 0]), fov: 24, focus: 'case', lens: 2.2 },
+  { t: 13.95, at: orbit(200, 0.186, -0.052), look: add3(CASE, [0, 0.005, 0]), fov: 24, focus: 'case', lens: 2.2 },
+  { t: 14.3, at: orbit(258, 0.20, -0.012), look: CASE, fov: 24, focus: 'case', lens: 2.2 },
+  { t: 14.65, at: orbit(302, 0.25, 0.04), look: toScreen(0.06), fov: 24, focus: 'case', lens: 2.0 },
+  // It lands with the case in front and the screen behind, and holds both in focus while
+  // the two taps land and the click they make plays out on the screen.
+  { t: 15.1, at: orbit(318, 0.302, 0.056), look: toScreen(0.21), fov: 23, focus: MIDWAY, lens: 0.85 },
+  { t: 16.3, at: orbit(321, 0.316, 0.06), look: toScreen(0.27), fov: 23, focus: MIDWAY, lens: 0.85 },
+  { t: 17.2, at: orbit(322, 0.32, 0.064), look: toScreen(0.3), fov: 23, focus: 'screen', lens: 2.4 },
+  // 4 Tune: over the case and in, until the app's window fills the left of the picture.
+  { t: 18.4, at: [-0.118, 0.262, 0.03], look: mix3(toScreen(0.8), WINDOW_VIEW, 0.65), fov: 23.5, focus: 'screen', lens: 2.8 },
+  { t: 19.6, at: before(WINDOW_VIEW, 0.477), look: WINDOW_VIEW, fov: 23, focus: SLIDER_POINT, lens: 2.6 },
+  { t: 22.8, at: before(WINDOW_VIEW, 0.447), look: WINDOW_VIEW, fov: 23, focus: SLIDER_POINT, lens: 2.6 },
+  { t: 23.5, at: before(WINDOW_VIEW, 0.452), look: WINDOW_VIEW, fov: 23, focus: 'screen', lens: 2.6 },
+  // 5 Close: straight back out the way it came in, so the case comes back into the picture
+  // with the screen still behind it; then up, to look down on it with the desk behind.
+  { t: 24.6, at: orbit(322, 0.325, 0.068), look: toScreen(0.27), fov: 23, focus: 'case', lens: 2.2 },
+  { t: 25.5, at: orbit(325, 0.30, 0.104), look: add3(toScreen(0.06), [0.02, 0, 0]), fov: 22.5, focus: 'case', lens: 1.7 },
+  { t: 26.7, at: orbit(330, 0.268, 0.142), look: add3(CASE, [0.052, -0.006, 0]), fov: 21.5, focus: 'case', lens: 1.3 },
+  { t: 30.0, at: orbit(336, 0.258, 0.148), look: add3(CASE, [0.054, -0.006, 0]), fov: 21.5, focus: 'case', lens: 1.3 },
+]
+
+// The keys round the case are close enough together that the curve through them stays round.
+const camAt = track3(KEYS.map(k => [k.t, k.at]))
+const camLook = track3(KEYS.map(k => [k.t, k.look]))
+const camFov = track(KEYS.map(k => [k.t, k.fov]))
+const camLens = track(KEYS.map(k => [k.t, k.lens]))
+// Focus is interpolated as its reciprocal, the way a lens barrel turns: a pull from near to
+// far spends its time evenly across the blur rather than rushing the near end.
+const camFocus = track(KEYS.map(k => {
+  const target = k.focus === 'case' ? CASE : k.focus === 'screen' ? SCREEN.centre : k.focus
+  return [k.t, 1 / dist(k.at, target)]
+}))
+
+export function camera(t) {
+  const at = camAt(t), look = camLook(t)
+  // The camera arm is never dead still.
+  at[0] += 0.0009 * wander(t * 0.6, 11.3)
+  at[1] += 0.0007 * wander(t * 0.6, 14.9)
+  let focus = 1 / camFocus(t)
+  // Leaving shot 4, the focus follows the screen as the camera backs away from it, and goes
+  // to the case only as the case comes into the picture. Pulled evenly across the move,
+  // there is a stretch in the middle with nothing sharp.
+  if (t > 23.5 && t < 24.6) {
+    const pull = smooth((t - 24.22) / 0.38)
+    focus = 1 / lerp(1 / dist(at, SCREEN.centre), 1 / dist(at, CASE), pull)
+  }
+  return { at, look, fov: camFov(t), focus, lens: camLens(t) / 1000 }
+}
+
