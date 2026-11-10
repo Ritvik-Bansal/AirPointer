@@ -154,6 +154,41 @@ export async function renderSound() {
     }
   })
 
+  // --- The pulse -----------------------------------------------------------------------
+
+  // From the moment the pointer is in use: eighth notes picked out of the chord, soft
+  // enough to feel rather than follow. It thins out for the ending.
+  const pluckBus = ctx.createBiquadFilter()
+  pluckBus.type = 'lowpass'
+  pluckBus.frequency.value = 2600
+  const echo = ctx.createDelay(1)
+  echo.delayTime.value = 0.375
+  const again = ctx.createGain()
+  again.gain.value = 0.3
+  pluckBus.connect(echo).connect(again).connect(echo)
+  send(pluckBus, 0.75, 0.3)
+  send(echo, 0.4, 0.3)
+  const pattern = [0, 2, 1, 3, 2, 4, 1, 3]
+  for (let step = 0; ; step++) {
+    const t = 5.5 + step * 0.25
+    if (t >= 26.5) break
+    const chord = [...CHORDS].reverse().find(c => t >= c.from)
+    const midi = chord.notes[pattern[step % 8] % chord.notes.length] + 12
+    const strength = (step % 2 === 0 ? 1 : 0.5) * (t < 6.5 ? (t - 5.5) : 1) * (t > 24.5 ? Math.max(0, (26.5 - t) / 2) : 1)
+    if (strength <= 0.02) continue
+    const osc = ctx.createOscillator()
+    osc.type = 'triangle'
+    osc.frequency.value = hz(midi)
+    const level = quiet()
+    level.gain.setValueAtTime(0, t)
+    level.gain.linearRampToValueAtTime(0.046 * strength, t + 0.006)
+    level.gain.exponentialRampToValueAtTime(0.0002, t + 0.34)
+    osc.connect(level)
+    panned(level, step % 2 ? 0.3 : -0.3).connect(pluckBus)
+    osc.start(t)
+    osc.stop(t + 0.36)
+  }
+
   const rendered = await ctx.startRendering()
   return wav(rendered)
 }
