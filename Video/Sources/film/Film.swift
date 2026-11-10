@@ -387,6 +387,68 @@ final class Film {
         }
     }
 
+    // MARK: Text
+
+    @ViewBuilder
+    private func text(_ t: Double) -> some View {
+        switch t {
+        case ..<At.aim:
+            // There from the first frame: nothing arrives, the lid simply opens beside it.
+            ChapterText(t: t, cue: Cue(start: -5, end: At.aim - 0.3), headline: ["AirPointer"],
+                        bodyText: "Your AirPods case, as a pointer for the Mac.", headlineSize: 104)
+        case ..<At.clipA:
+            ChapterText(t: t, cue: Cue(start: At.aim + 0.5, end: At.clipA - 0.15), headline: ["Aim it."],
+                        bodyText: "The cursor on the Mac follows the case.")
+            note("Real motion, replayed through the app's own engine.", t, Cue(start: turnStart + 0.4, end: At.clipA - 0.15))
+        case ..<At.tap:
+            EmptyView()
+        case ..<At.clipB:
+            ChapterText(t: t, cue: Cue(start: At.tap + 0.3, end: At.clipB - 0.15), headline: ["Tap it."],
+                        bodyText: "Two taps on the back click.\nOne tap right-clicks.")
+        case ..<At.sensors:
+            EmptyView()
+        case ..<At.gravity:
+            ChapterText(t: t, cue: Cue(start: At.sensors + 0.3, end: At.gravity - 0.15), headline: ["The sensors are", "in the AirPods."],
+                        bodyText: "Docked, with the lid open, they send their motion fifty times a second.", width: 700)
+        case ..<At.jolt:
+            ChapterText(t: t, cue: Cue(start: At.gravity + 0.3, end: At.jolt - 0.15), headline: ["Gravity says", "which way is up."],
+                        bodyText: "Turn it for left and right.\nTilt it for up and down.")
+        case ..<At.proof:
+            ChapterText(t: t, cue: Cue(start: At.jolt + 0.3, end: At.proof - 0.15), headline: ["A tap is one reading", "out of line."],
+                        bodyText: "A knock from handling the case is refused:\nthe hand has to be still first.", width: 900)
+        case ..<At.setup:
+            let cue = Cue(start: At.proof + 0.3, end: At.setup - 0.15)
+            ChapterText(t: t, cue: cue, headline: ["Tuned on recordings", "of a real hand."])
+            note("One recorded session, replayed end to end.", t, Cue(start: At.proof + 1.6, end: At.setup - 0.15))
+        case ..<At.end:
+            ChapterText(t: t, cue: Cue(start: At.setup + 0.3, end: At.end - 0.15), headline: ["To start"])
+        default:
+            // The last frame is this card, held: it is what a player is left showing.
+            let cue = Cue(start: At.end + 0.3, end: nil)
+            ChapterText(t: t, cue: cue, headline: ["AirPointer"], bodyText: nil, headlineSize: 104)
+            VStack(alignment: .leading, spacing: 18) {
+                Text(repository).font(.system(size: 42, weight: .medium)).foregroundStyle(Look.key).fixedSize()
+                Text("Tested with AirPods Pro 3 on macOS 27.").font(Look.small).foregroundStyle(Look.soft).fixedSize()
+            }
+            .lift(t, cue, delay: 0.35)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.leading, Look.margin)
+            .padding(.top, 296)
+        }
+    }
+
+    /// A small line along the bottom of the frame, for saying how something was made.
+    private func note(_ text: String, _ t: Double, _ cue: Cue) -> some View {
+        Text(text)
+            .font(Look.small)
+            .foregroundStyle(Look.soft)
+            .fixedSize()
+            .lift(t, cue)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .padding(.leading, Look.margin)
+            .padding(.bottom, 84)
+    }
+
 }
 
 extension Take {
