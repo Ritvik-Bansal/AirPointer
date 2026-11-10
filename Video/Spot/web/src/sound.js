@@ -92,6 +92,68 @@ export async function renderSound() {
   }
   const panned = (node, pan) => { const p = ctx.createStereoPanner(); p.pan.value = pan; node.connect(p); return p }
 
+  // --- The pad -------------------------------------------------------------------------
+
+  const padFilter = ctx.createBiquadFilter()
+  padFilter.type = 'lowpass'
+  padFilter.Q.value = 0.5
+  // It opens as the lid does, breathes through the middle, and closes for the ending.
+  padFilter.frequency.setValueAtTime(420, 0)
+  padFilter.frequency.linearRampToValueAtTime(700, CUE.lidOpens)
+  padFilter.frequency.linearRampToValueAtTime(1500, 5.5)
+  padFilter.frequency.linearRampToValueAtTime(1150, 12.5)
+  padFilter.frequency.linearRampToValueAtTime(2100, 14.2)
+  padFilter.frequency.linearRampToValueAtTime(1400, 19)
+  padFilter.frequency.linearRampToValueAtTime(1700, 24)
+  padFilter.frequency.linearRampToValueAtTime(1000, 27)
+  padFilter.frequency.linearRampToValueAtTime(620, DURATION)
+  send(padFilter, 0.5, 0.42)
+
+  CHORDS.forEach((chord, index) => {
+    const start = chord.from, end = index + 1 < CHORDS.length ? CHORDS[index + 1].from : DURATION
+    const attack = index === 0 ? 1.8 : 1.3, release = 1.9
+    chord.notes.forEach((midi, voice) => {
+      const level = quiet()
+      const peak = 0.078 * (voice === chord.notes.length - 1 ? 0.6 : 1)
+      level.gain.setValueAtTime(0, Math.max(0, start - 0.45))
+      level.gain.linearRampToValueAtTime(peak, Math.max(0.01, start - 0.45) + attack)
+      level.gain.setValueAtTime(peak, end - 0.3)
+      level.gain.linearRampToValueAtTime(0, Math.min(DURATION, end - 0.3 + release))
+      const side = panned(level, (voice % 2 ? 1 : -1) * 0.25 * (voice / chord.notes.length + 0.3))
+      side.connect(padFilter)
+      for (const [type, cents, gain] of [['triangle', -6, 0.55], ['triangle', 7, 0.55], ['sawtooth', 0, 0.16]]) {
+        const osc = ctx.createOscillator()
+        osc.type = type
+        osc.frequency.value = hz(midi)
+        osc.detune.value = cents
+        const g = ctx.createGain()
+        g.gain.value = gain
+        osc.connect(g).connect(level)
+        osc.start(Math.max(0, start - 0.5))
+        osc.stop(Math.min(DURATION, end + release))
+      }
+    })
+    // The bass: one soft sine under each chord, with a quieter octave above it so that it
+    // is still there on small speakers.
+    const level = quiet()
+    const full = index === 0 ? 0.06 : 0.09
+    level.gain.setValueAtTime(0, Math.max(0, start - 0.2))
+    level.gain.linearRampToValueAtTime(full, Math.max(0.01, start - 0.2) + 0.9)
+    level.gain.setValueAtTime(full, end - 0.25)
+    level.gain.linearRampToValueAtTime(0, Math.min(DURATION, end + 0.7))
+    send(level, 1, 0.05)
+    for (const [octave, gain] of [[1, 1], [2, 0.42]]) {
+      const bass = ctx.createOscillator()
+      bass.type = 'sine'
+      bass.frequency.value = hz(chord.bass) * octave
+      const g = ctx.createGain()
+      g.gain.value = gain
+      bass.connect(g).connect(level)
+      bass.start(Math.max(0, start - 0.25))
+      bass.stop(Math.min(DURATION, end + 0.8))
+    }
+  })
+
   const rendered = await ctx.startRendering()
   return wav(rendered)
 }
