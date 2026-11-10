@@ -68,3 +68,46 @@ function draw(ctx, t, mini) {
   pointer(ctx, t)
 }
 
+// --- The desktop -----------------------------------------------------------------------
+
+function desktop(ctx) {
+  // A plain wallpaper: one deep blue, and one large flat shape for the eye to rest on.
+  ctx.fillStyle = '#0B1A2E'
+  ctx.fillRect(0, 0, UI.width, UI.height)
+  ctx.fillStyle = '#0F2440'
+  ctx.beginPath()
+  ctx.arc(1010, 940, 620, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#12305A'
+  ctx.beginPath()
+  ctx.arc(1240, 1010, 420, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.fillStyle = 'rgba(6, 10, 16, 0.74)'
+  ctx.fillRect(0, 0, UI.width, UI.menuBar)
+  const y = UI.menuBar / 2 + 0.5
+  const ink = 'rgba(236, 242, 248, 0.92)'
+  text(ctx, 'AirPointer', 20, y, `700 13px ${TEXT}`, ink)
+  let x = 20 + measure(ctx, 'AirPointer', `700 13px ${TEXT}`) + 20
+  for (const item of ['File', 'Edit', 'View', 'Window', 'Help']) {
+    text(ctx, item, x, y, `500 13px ${TEXT}`, ink)
+    x += measure(ctx, item, `500 13px ${TEXT}`) + 20
+  }
+  text(ctx, '9:41', UI.width - 16, y, `500 13px ${TEXT}`, ink, 'right')
+  text(ctx, 'Tue 10 Nov', UI.width - 58, y, `500 13px ${TEXT}`, ink, 'right')
+  // The app's place in the menu bar: a small case, lit.
+  const gx = UI.width - 158
+  roundRect(ctx, gx - 7, y - 5.5, 14, 11, 3.6)
+  ctx.strokeStyle = C.key
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(gx - 7, y - 1.6)
+  ctx.lineTo(gx + 7, y - 1.6)
+  ctx.stroke()
+}
+function measure(ctx, string, font) {
+  ctx.font = font
+  return ctx.measureText(string).width
+}
+
