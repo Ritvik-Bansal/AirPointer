@@ -355,3 +355,34 @@ That is why three things the app's sections describe are absent here. The dot sc
 
 There is one room and one object. Whenever the film is drawing, the case is in the frame, and whatever is said about it is said beside it. It gives way only to the two clips, which open over it.
 
+### Palette
+
+Fixed sRGB values, not appearance pairs: the film has no light version. All but two are the app's Dark Mode tokens.
+
+| `Look` | Hex | Used for |
+| --- | --- | --- |
+| `wall` | `#0E151D` | The wall (the app's `stage-dark`); the fill of the tag capsule and of the callout's open ring. |
+| `floor` | `#090E14` | The floor, below 742 px (`stage-floor-dark`). |
+| `panel` | `#16202B` | The face of the dot screen, the signal display and the clip card (`panel-dark`). |
+| `ink` | `#EAF2F8` | Headlines, labels joined to the case, the large figures, the steps, a refused verdict, the hand-turning band where it is over its limit (`ink-dark`). |
+| `soft` | `#9FB2C4` | Sentences, notes, the "/ 10" beside a figure, callout lines and rings, the gravity line and its label, band labels, quiet lit dots on the signal display (`ink-soft-dark`). |
+| `key` | `#48B9F5` | Lit dots, the live outline of a display, the tag's outline, the two arcs of the gravity diagram, counted taps, an accepted verdict, step numerals, the address on the end card (`keyline-dark`, which at night is also `action-dark`, so it may be read as text here). |
+| `hairline` | `#2A3947` | A display's outline before it is live, and the clip frame's 2 px border. Not the app's `hairline-dark` (`#27343F`); the film sets its own value. |
+| `dotOff` | `#2B3947` | An unlit dot (`dot-off-dark`). |
+| `dotLine` | `#566A7D` | An unlit dot that is part of a threshold line drawn across the signal display. Film only. |
+
+`warn` is not used. Opacity is used on `key` and `ink` only in the gravity diagram (an arc at 30% until its rotation is being shown, its label at 40%) and on lit dots by brightness. The case's status light and tap ring take the app's `Theme.keyline` inside the 3D scene; in the rendered film the ring measures close to `key` (`#46B4EE`) and the status light is `key` exactly (`#48B9F5`).
+
+### Type
+
+The same two faces as the app: SF Pro Rounded for headlines, labels and figures, plain SF Pro for sentences.
+
+- **Title** (bold rounded, 104 px, tracking -1.2% of the size): "AirPointer" on the title card and the end card.
+- **Chapter headline** (bold rounded, 72 px, tracking -1.2%): one or two lines, each its own line of text with no extra leading. "Aim it." "Tap it." "The sensors are / in the AirPods." "Gravity says / which way is up." "A tap is one reading / out of line." "Tuned on recordings / of a real hand." "To start".
+- **Figure** (bold rounded, tabular digits): 168 px in `ink` for a result, 64 px in `soft` for "/ 10" beside it, 46 px in `key` for a step numeral.
+- **Step** (medium, 46 px, `ink`): the three steps.
+- **Address** (medium, 42 px, `key`): the repository on the end card.
+- **Sentence** (`Look.sub`, regular, 37 px, `soft`, 9 px line spacing): the one or two sentences 26 px under a headline, in a block 800 px wide (700 and 900 where a line break needed it), and the label under each result.
+- **Label** (`Look.label`, semibold rounded, 32 px): anything attached to a drawing: callouts, "gravity", "left and right", "up and down", "hand turning", "jolts", the verdicts under the signal display, the word in the tag on the screen.
+- **Small** (`Look.small`, regular, 32 px, `soft`): the note along the bottom saying how something was made, and "Tested with AirPods Pro 3 on macOS 27." on the end card.
+
