@@ -320,6 +320,73 @@ final class Film {
         take.marks(.tap).last { local >= $0 && local < $0 + 0.5 }.map { (local - $0) / 0.5 }
     }
 
+    // MARK: The screen
+
+    private struct ScreenState {
+        var cursor = CGPoint(x: 0.5, y: 0.5)
+        var trail: [(point: CGPoint, age: Double)] = []
+        var rings: [(point: CGPoint, progress: Double)] = []
+        var tag: (text: String, progress: Double)?
+    }
+
+    /// Where the cursor is. Each take carries it on from where the one before left it.
+    private func cursor(_ t: Double) -> CGPoint {
+        var p = origin
+        for (take, start) in [(turn, turnStart), (tilt, tiltStart), (pairs, pairsStart), (single, singleStart)] where t >= start {
+            let now = take.frame(at: t - start).cursor, first = take.frames.first?.cursor ?? now
+            p.x += now.x - first.x
+            p.y += now.y - first.y
+        }
+        return CGPoint(x: min(max(p.x, 0.03), 0.97), y: min(max(p.y, 0.04), 0.96))
+    }
+
+    private func screen(_ t: Double) -> ScreenState {
+        var s = ScreenState(cursor: cursor(t))
+        if t >= turnStart, t < aimEnd + 0.5 {
+            for k in 1...22 {
+                let earlier = t - Double(k) / Double(Self.fps)
+                if earlier >= turnStart { s.trail.append((cursor(earlier), Double(k) / 23)) }
+            }
+        }
+        for (take, start) in [(pairs, pairsStart), (single, singleStart)] where t >= start {
+            let local = t - start
+            for tap in take.marks(.tap) where local >= tap && local < tap + 0.6 {
+                s.rings.append((s.cursor, (local - tap) / 0.6))
+            }
+            for mark in take.marks where local >= mark.time && local < mark.time + 1.2 {
+                let progress = (local - mark.time) / 1.2
+                switch mark.mark {
+                case .click: s.tag = ("click", progress)
+                case .doubleClick: s.tag = ("double-click", progress)
+                case .rightClick: s.tag = ("right-click", progress)
+                case .tap, .knock: break
+                }
+            }
+        }
+        return s
+    }
+
+    @ViewBuilder
+    private func stage(_ t: Double) -> some View {
+        // The screen stays up from the aiming to the tapping, the first clip included; it is
+        // taken down behind the second.
+        if t >= At.aim, t < At.clipB + 3 {
+            let state = screen(t)
+            DotScreen(
+                appear: span(t, from: At.aim + 0.2, over: 1.1),
+                live: span(t, from: turnStart - 0.5, over: 0.3),
+                cursor: state.cursor, trail: state.trail, rings: state.rings, tag: state.tag
+            )
+            .position(screenCentre)
+        }
+        let place = placement(t)
+        let size = CGSize(width: (baseSize.width * place.scale).rounded(), height: (baseSize.height * place.scale).rounded())
+        let pixels = CGSize(width: size.width * detail, height: size.height * detail)
+        if let image = caseRenderer.image(pose(t), size: pixels) {
+            Image(decorative: image, scale: detail).position(place.centre)
+        }
+    }
+
 }
 
 extension Take {
