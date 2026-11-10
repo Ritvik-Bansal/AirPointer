@@ -176,3 +176,36 @@ function extend(material, { windows = [], light = false, print = false, taps = f
   return material
 }
 
+/// The two lines printed under the hinge, as a texture.
+function printTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = Math.round(1024 * (PRINT.pitch * 2.5) / (PRINT.width + 1))
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#fff'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const size = canvas.height * 0.3
+  ctx.font = `400 ${size}px "SF Text", system-ui, sans-serif`
+  const fit = text => {
+    const wide = ctx.measureText(text).width
+    return Math.min(1, (canvas.width * PRINT.width / (PRINT.width + 1)) / wide)
+  }
+  const squeeze = fit(PRINT.lines[0])
+  PRINT.lines.forEach((line, i) => {
+    ctx.save()
+    ctx.translate(canvas.width / 2, canvas.height * (i === 0 ? 0.3 : 0.7))
+    ctx.scale(squeeze, 1)
+    ctx.fillText(line, 0, 0)
+    ctx.restore()
+  })
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.flipY = true
+  texture.anisotropy = 8
+  texture.generateMipmaps = true
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  return texture
+}
+
