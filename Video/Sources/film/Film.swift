@@ -214,6 +214,112 @@ final class Film {
         return place
     }
 
+    // MARK: How the case is held
+
+    private let rest = Pose(yaw: -14, pitch: 9)
+
+    private func posed(_ frame: Take.Frame?) -> Pose {
+        guard let frame else { return Pose() }
+        return Pose(yaw: frame.yaw, pitch: frame.pitch, roll: frame.roll)
+    }
+
+    private func blend(_ a: Pose, _ b: Pose, _ x: Double) -> Pose {
+        Pose(yaw: mix(a.yaw, b.yaw, x), pitch: mix(a.pitch, b.pitch, x), roll: mix(a.roll, b.roll, x), lid: mix(a.lid, b.lid, x))
+    }
+
+    private func pose(_ t: Double) -> Pose {
+        switch t {
+        case ..<turnStart:
+            // Shut on the first frame. The lid lifts, and the case turns slowly to face the viewer.
+            return Pose(yaw: mix(-18, 4, glide(span(t, from: 0, over: turnStart))), pitch: 9, lid: glide(span(t, from: 0.6, over: 1.2)))
+
+        case ..<At.clipA:
+            // Turned left and right, then tilted up and down, as it was recorded.
+            let turnEnd = turnStart + turn.length
+            if t < turnEnd {
+                return blend(Pose(yaw: 4, pitch: 9), posed(turn.frame(at: t - turnStart)), glide(span(t, from: turnStart, over: 0.5)))
+            }
+            if t < tiltStart {
+                return blend(posed(turn.frames.last), posed(tilt.frames.first), glide(span(t, from: turnEnd, over: tiltStart - turnEnd)))
+            }
+            if t < aimEnd { return posed(tilt.frame(at: t - tiltStart)) }
+            return blend(posed(tilt.frames.last), posed(pairs.frames.first), glide(span(t, from: aimEnd, over: At.clipA - aimEnd)))
+
+        case ..<pairsStart:
+            return posed(pairs.frames.first)
+
+        case ..<(At.clipB + 3):
+            // Tapped twice, twice over, then once.
+            let pairsEnd = pairsStart + pairs.length
+            var p: Pose
+            if t < pairsEnd {
+                p = posed(pairs.frame(at: t - pairsStart))
+            } else if t < singleStart {
+                p = blend(posed(pairs.frames.last), posed(single.frames.first), glide(span(t, from: pairsEnd, over: singleStart - pairsEnd)))
+            } else {
+                p = posed(single.frame(at: t - singleStart))
+            }
+            p.ring = ring(single, t - singleStart) ?? ring(pairs, t - pairsStart)
+            return p
+
+        case ..<At.gravity:
+            // Held nearly still while the labels point at it.
+            return Pose(yaw: mix(-20, -12, glide(span(t, from: At.sensors, over: At.gravity - At.sensors))), pitch: 10)
+
+        case ..<At.jolt:
+            return demonstrating(t - At.gravity)
+
+        case ..<At.proof:
+            // Turning back to face the viewer as it moves aside, then replaying the stretch the display shows.
+            if t < stripStart {
+                return blend(demonstrating(At.jolt - At.gravity), posed(strip.frames.first), glide(span(t, from: At.jolt - 0.1, over: 1.1)))
+            }
+            var p = posed(strip.frame(at: t - stripStart))
+            p.ring = ring(strip, t - stripStart)
+            return p
+
+        case ..<At.setup:
+            // The lid shuts where the case is, as the results leave, so that it is not also
+            // travelling while it does; the steps that follow begin from a shut case.
+            var p = blend(posed(strip.frames.last), rest, glide(span(t, from: At.proof - 0.1, over: 1.0)))
+            p.lid = 1 - glide(span(t, from: At.setup - 1.0, over: 0.85))
+            return p
+
+        case ..<At.end:
+            // Shut, to begin from the beginning; opened on the second step; pointed on the third.
+            let s = t - At.setup
+            var p = rest
+            p.lid = glide(span(s, from: 2.3, over: 1.1))
+            let pointing = glide(span(s, from: 3.8, over: 0.4)) * (1 - glide(span(s, from: 5.2, over: 0.4)))
+            p.yaw += 15 * pointing * sin(2 * .pi * (s - 3.8) / 1.8)
+            return p
+
+        default:
+            var p = rest
+            p.yaw = mix(rest.yaw, -6, glide(span(t, from: At.end, over: At.finish - At.end)))
+            return p
+        }
+    }
+
+    /// The gravity chapter, `g` seconds in: turned left and right about the line of gravity,
+    /// then turned side-on to the viewer, so that tilting it up and down happens in the plane
+    /// of the picture and can be seen for what it is.
+    private func demonstrating(_ g: Double) -> Pose {
+        let facing = mix(-12, 0, glide(span(g, from: 0, over: 1.0)))
+        let turning = glide(span(g, from: 2.0, over: 0.5)) * (1 - glide(span(g, from: 4.0, over: 0.5)))
+        let side = glide(span(g, from: 4.7, over: 0.9))
+        let tilting = glide(span(g, from: 5.8, over: 0.5)) * (1 - glide(span(g, from: 7.5, over: 0.5)))
+        return Pose(
+            yaw: facing + 26 * turning * sin(2 * .pi * (g - 2.0) / 2.5) + 62 * side,
+            pitch: 10 + 17 * tilting * sin(2 * .pi * (g - 5.8) / 2.2)
+        )
+    }
+
+    /// How far the tap ring has spread at `local` seconds into a take, if a tap is still ringing.
+    private func ring(_ take: Take, _ local: Double) -> Double? {
+        take.marks(.tap).last { local >= $0 && local < $0 + 0.5 }.map { (local - $0) / 0.5 }
+    }
+
 }
 
 extension Take {
