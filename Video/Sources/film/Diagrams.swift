@@ -127,3 +127,152 @@ struct AxisDiagram: View {
     }
 }
 
+/// A stretch of the real signal on a dot-matrix display of its own, lit as it is read.
+///
+/// Each column is a sliver of time. The lower band is the jolt score: quiet readings sit on
+/// the bottom row and a tap stands up as a column on its own. The upper band is how much the
+/// hand had been turning just before. A row of paler dots across each band marks the line that
+/// matters there: a jolt has to reach its line, and the hand has to be under its own.
+struct SignalDisplay: View {
+    /// The dot screen's own spacing, so the two displays are one kind of thing.
+    static let cell = (DotScreen.size.width - 60) / CGFloat(DotScreen.columns)
+    static let columns = 87
+    static let unrestRows = 8
+    static let joltRows = 9
+    private static let inset: CGFloat = 30
+    private static let rows = unrestRows + 1 + joltRows
+
+    static let panel = CGSize(width: inset * 2 + CGFloat(columns) * cell, height: inset * 2 + CGFloat(rows) * cell)
+    static let size = CGSize(width: 1620, height: panel.height + 62)
+
+    /// Degrees a second of turning that one dot of the upper band stands for, and the
+    /// engine's limit, above which a jolt is refused.
+    private let unrestStep = 4.0
+    private let unrestLimit = 16.0
+    /// Dots of the lower band that a jolt only just counting as a tap reaches.
+    private let joltLine = 3
+    private let joltScale = 2.4
+
+    let take: Take
+    /// Length of the take in seconds.
+    let length: Double
+    /// 0…1: how far the reading has got.
+    let head: Double
+    /// 0…1: the display draws on.
+    let appear: Double
+
+    var body: some View {
+        let left = Self.size.width - Self.panel.width
+        let shape = RoundedRectangle(cornerRadius: 30, style: .continuous)
+        ZStack(alignment: .topLeading) {
+            ZStack {
+                shape.fill(Look.panel).opacity(span(appear, from: 0.2, over: 0.5))
+                shape.trim(from: 0, to: glide(span(appear, from: 0, over: 0.75)))
+                    .stroke(Look.hairline, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                shape.stroke(Look.key, lineWidth: 3).opacity(span(head, from: 0, over: 0.04))
+                Canvas { context, size in draw(&context, size) }
+                    .padding(Self.inset)
+                    .opacity(span(appear, from: 0.5, over: 0.5))
+            }
+            .frame(width: Self.panel.width, height: Self.panel.height)
+            .offset(x: left)
+
+            // What each band is, beside it.
+            let labels = span(appear, from: 0.5, over: 0.5)
+            Text("hand turning").font(Look.label).foregroundStyle(Look.soft).fixedSize()
+                .frame(width: left - 28, height: CGFloat(Self.unrestRows) * Self.cell, alignment: .trailing)
+                .offset(y: Self.inset)
+                .opacity(labels)
+            Text("jolts").font(Look.label).foregroundStyle(Look.soft).fixedSize()
+                .frame(width: left - 28, height: CGFloat(Self.joltRows) * Self.cell, alignment: .trailing)
+                .offset(y: Self.inset + CGFloat(Self.unrestRows + 1) * Self.cell)
+                .opacity(labels)
+
+            // What the engine made of each jolt, written under it as the reading passes.
+            ForEach(Array(verdicts.enumerated()), id: \.offset) { _, verdict in
+                let at = left + Self.inset + (Self.panel.width - Self.inset * 2) * verdict.time / length
+                let shown = settle(span(head * length, from: verdict.time + 0.1, over: 0.5))
+                Text(verdict.text)
+                    .font(Look.label)
+                    .foregroundStyle(verdict.accepted ? Look.key : Look.ink)
+                    .fixedSize()
+                    .frame(width: 360, alignment: .center)
+                    .offset(x: min(max(at - 180, left), Self.size.width - 360), y: Self.panel.height + 14 + (1 - shown) * 10)
+                    .opacity(shown)
+            }
+        }
+        .frame(width: Self.size.width, height: Self.size.height, alignment: .topLeading)
+    }
+
+    private func draw(_ context: inout GraphicsContext, _ size: CGSize) {
+        let cell = Self.cell
+        let step = length / Double(Self.columns)
+        let reached = Int((head * Double(Self.columns)).rounded(.down))
+        var unlit = Path(), line = Path(), quiet = Path(), bright = Path(), counted = Path()
+
+        func dot(_ column: Int, _ row: Int, _ radius: CGFloat) -> CGRect {
+            // Rows count from the top of the display.
+            CGRect(x: (CGFloat(column) + 0.5) * cell - radius, y: (CGFloat(row) + 0.5) * cell - radius, width: radius * 2, height: radius * 2)
+        }
+
+        for column in 0..<Self.columns {
+            let from = Double(column) * step, to = from + step
+            let readings = take.readings.filter { $0.time >= from && $0.time < to }
+            let revealed = column < reached && !readings.isEmpty
+
+            // Upper band: how much the hand had been turning. Always at least one dot, so it reads as a trace.
+            let unrest = readings.map(\.unrest).max() ?? 0
+            let restless = revealed ? min(Self.unrestRows, max(1, Int((unrest / unrestStep).rounded()))) : 0
+            let limitRow = Int(unrestLimit / unrestStep)
+            for k in 1...Self.unrestRows {
+                let row = Self.unrestRows - k
+                if k <= restless {
+                    if restless > limitRow { bright.addEllipse(in: dot(column, row, 4.4)) } else { quiet.addEllipse(in: dot(column, row, 4.4)) }
+                } else if k == limitRow {
+                    line.addEllipse(in: dot(column, row, 2.9))
+                } else {
+                    unlit.addEllipse(in: dot(column, row, 2.9))
+                }
+            }
+
+            // Lower band: the jolt score.
+            let level = readings.map(\.level).max() ?? 0
+            let height = revealed ? min(Self.joltRows, max(1, Int((level * joltScale).rounded()))) : 0
+            let tapped = take.marks.contains { $0.mark == .tap && $0.time >= from - 0.03 && $0.time < to + 0.03 } && height >= joltLine
+            for k in 1...Self.joltRows {
+                let row = Self.rows - k
+                if k <= height {
+                    if tapped { counted.addEllipse(in: dot(column, row, 4.4)) } else { quiet.addEllipse(in: dot(column, row, 4.4)) }
+                } else if k == joltLine {
+                    line.addEllipse(in: dot(column, row, 2.9))
+                } else {
+                    unlit.addEllipse(in: dot(column, row, 2.9))
+                }
+            }
+        }
+        context.fill(unlit, with: .color(Look.dotOff))
+        context.fill(line, with: .color(Look.dotLine))
+        context.fill(quiet, with: .color(Look.soft))
+        context.fill(bright, with: .color(Look.ink))
+        context.fill(counted, with: .color(Look.key))
+    }
+
+    /// One line per decision: each click (two taps), and each knock refused.
+    private var verdicts: [(time: Double, text: String, accepted: Bool)] {
+        var out: [(Double, String, Bool)] = []
+        for mark in take.marks {
+            switch mark.mark {
+            case .click: out.append((mark.time - 0.12, "two taps: click", true))
+            case .doubleClick: out.append((mark.time, "double-click", true))
+            case .rightClick: out.append((mark.time - 0.42, "one tap: right-click", true))
+            case .knock:
+                // Refused jolts close together are one knock.
+                if let last = out.last, !last.2, mark.time - last.0 < 0.8 { continue }
+                out.append((mark.time + 0.15, "a knock: refused", false))
+            case .tap: break
+            }
+        }
+        return out
+    }
+}
+
