@@ -2,6 +2,110 @@ import AVFoundation
 import Foundation
 import SwiftUI
 
+/// The places in the film that are filled by filmed clips, and the clips themselves.
+///
+/// Everything the film takes from outside lives in `Video/footage`:
+///
+///     A.mov, B.mov   a clip for each slot (.mov, .mp4 or .m4v), any size, either way up
+///     music.m4a      optional music under the whole film (.m4a, .mp3, .wav, .aiff or .flac)
+///     cuts.json      optional: where each one starts, and which clips keep their sound
+///                    { "A": 1.5, "B": { "in": 0.8, "sound": true }, "music": { "in": 12 } }
+///
+/// Until a clip exists, its slot shows a card saying what belongs there.
+@MainActor
+final class Footage {
+    struct Slot {
+        let name: String
+        let start: Double
+        let duration: Double
+        /// What the card says belongs here.
+        let title: String
+        let brief: String
+    }
+
+    /// Where a clip or the music starts, and whether a clip's own sound is kept.
+    struct Cut: Decodable {
+        var start = 0.0
+        var sound = false
+
+        init() {}
+
+        /// Either a number of seconds, or `{ "in": seconds, "sound": true }`.
+        init(from decoder: Decoder) throws {
+            if let seconds = try? decoder.singleValueContainer().decode(Double.self) {
+                start = seconds
+                return
+            }
+            let values = try decoder.container(keyedBy: Key.self)
+            start = try values.decodeIfPresent(Double.self, forKey: .in) ?? 0
+            sound = try values.decodeIfPresent(Bool.self, forKey: .sound) ?? false
+        }
+
+        enum Key: String, CodingKey { case `in`, sound }
+    }
+
+    /// The picture's place in the frame: between the film's margins, and large enough to
+    /// cover the stage behind it, so a clip can arrive over the case without the case having to leave.
+    static let frame = CGRect(x: 150, y: 84, width: 1620, height: 912)
+
+    private let files: [URL]
+    private let detail: Double
+    private var cuts: [String: Cut] = [:]
+    private var readers: [String: ClipReader] = [:]
+
+    /// - Parameter detail: Pixels per point of the film being drawn; clips are read at that size.
+    init(folder: URL, detail: Double = 1) {
+        self.detail = detail
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        files = names.sorted().map { folder.appendingPathComponent($0) }
+        let list = folder.appendingPathComponent("cuts.json")
+        if let data = try? Data(contentsOf: list) {
+            do {
+                cuts = try JSONDecoder().decode([String: Cut].self, from: data)
+            } catch {
+                note("cuts.json could not be read, so every clip starts at its beginning: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func file(named name: String, kinds: [String]) -> URL? {
+        files.first { url in
+            url.deletingPathExtension().lastPathComponent.caseInsensitiveCompare(name) == .orderedSame
+                && kinds.contains(url.pathExtension.lowercased())
+        }
+    }
+
+    func clip(for slot: String) -> URL? {
+        file(named: slot, kinds: ["mov", "mp4", "m4v"])
+    }
+
+    func cut(for name: String) -> Cut {
+        cuts.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value ?? Cut()
+    }
+
+    /// The music, and how far into it the film starts.
+    var music: (url: URL, start: Double)? {
+        file(named: "music", kinds: ["m4a", "mp3", "wav", "aiff", "aif", "flac"]).map { ($0, cut(for: "music").start) }
+    }
+
+    /// The clip's picture at `local` seconds into its slot, or nil when there is no clip.
+    func image(_ slot: Slot, at local: Double, fps: Int) -> CGImage? {
+        guard let url = clip(for: slot.name) else { return nil }
+        let index = Int((local * Double(fps)).rounded())
+        if let reader = readers[slot.name], reader.next <= index {
+            return reader.frame(index)
+        }
+        // Start (or restart, when asked for an earlier frame) from the right place.
+        readers[slot.name]?.stop()
+        let reader = ClipReader(
+            url: url, from: cut(for: slot.name).start + Double(index) / Double(fps),
+            size: CGSize(width: Self.frame.width * detail, height: Self.frame.height * detail), fps: fps, firstIndex: index
+        )
+        readers[slot.name] = reader
+        return reader.frame(index)
+    }
+}
+
 /// Says something to whoever is rendering, without touching the picture.
 func note(_ text: String) {
     FileHandle.standardError.write(Data(("  " + text + "\n").utf8))
