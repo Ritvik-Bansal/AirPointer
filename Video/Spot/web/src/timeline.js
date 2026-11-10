@@ -99,3 +99,29 @@ function track3(keys) {
 const wander = (t, seed) =>
   0.5 * Math.sin(t * 0.83 + seed) + 0.3 * Math.sin(t * 1.37 + seed * 2.1) + 0.2 * Math.sin(t * 2.31 + seed * 3.7)
 
+// --- The lid and the light -------------------------------------------------------------
+
+/// Lid angle in degrees.
+export function lid(t) {
+  if (t < CUE.lidShuts) {
+    // It lifts, runs past by a couple of degrees and comes to rest.
+    const s = span(t, CUE.lidOpens, 0.8)
+    const over = Math.sin(clamp(span(t, CUE.lidOpens + 0.5, 0.55)) * Math.PI) * 2.2
+    return 102 * outCubic(s) + over * (s > 0 ? 1 : 0)
+  }
+  // It shuts faster than it opened and lands with a small bounce.
+  const s = span(t, CUE.lidShuts, 0.42)
+  const bounce = Math.sin(span(t, CUE.lidShuts + 0.42, 0.2) * Math.PI) * 2.4
+  return 102 * (1 - inCubic(s)) + (s >= 1 ? bounce : 0)
+}
+
+/// How bright the hidden light on the case is, 0 to 1. It comes on when the lid opens and,
+/// as on the real case, goes out again a few seconds later.
+export const caseLight = t => smooth(span(t, CUE.lightOn, 0.35)) * (1 - smooth(span(t, 9.2, 1.2)))
+
+/// How bright the Mac's screen is, 0 to 1.
+export const screenLevel = t => smoother(span(t, CUE.screenWakes, 0.9))
+
+/// True while the pointer is live: lid open and AirPods awake.
+export const pointing = t => t > CUE.lidOpens + 0.9 && t < CUE.lidShuts + 0.2
+
