@@ -276,3 +276,65 @@ struct SignalDisplay: View {
     }
 }
 
+/// Three results from the recorded session, each with a dot for every tap or knock it counts.
+struct Figures: View {
+    let t: Double
+    let cue: Cue
+
+    private struct Item {
+        let got: Int
+        let of: Int
+        let label: String
+        /// Dots for each one counted: 2 for a double-tap.
+        var group = 1
+        /// Whether a dot lit is the good outcome (a tap found) or the bad one (a knock let through).
+        var lit: Bool { got > 0 }
+    }
+
+    private let items = [
+        Item(got: 10, of: 10, label: "single taps found"),
+        Item(got: 6, of: 6, label: "double-taps found", group: 2),
+        Item(got: 0, of: 12, label: "knocks let through"),
+    ]
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 92) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                let delay = 0.5 + Double(index) * 0.16
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .firstTextBaseline, spacing: 14) {
+                        Text("\(item.got)").font(Look.figure(168)).foregroundStyle(Look.ink)
+                        Text("/ \(item.of)").font(Look.figure(64)).foregroundStyle(Look.soft)
+                    }
+                    .fixedSize()
+                    .reveal(t, cue, delay: delay)
+                    dots(item, from: cue.start + delay + 0.45)
+                        .padding(.top, 4)
+                        .lift(t, cue, delay: delay + 0.2)
+                    Text(item.label).font(Look.sub).foregroundStyle(Look.soft).fixedSize()
+                        .padding(.top, 22)
+                        .lift(t, cue, delay: delay + 0.25)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.leading, Look.margin)
+        .padding(.top, 420)
+    }
+
+    /// A dot for each one counted, lighting in turn; a knock that was refused stays unlit.
+    private func dots(_ item: Item, from start: Double) -> some View {
+        HStack(spacing: item.group > 1 ? 16 : 9) {
+            ForEach(0..<item.of, id: \.self) { index in
+                HStack(spacing: 5) {
+                    ForEach(0..<item.group, id: \.self) { _ in
+                        let on = item.lit && t >= start + Double(index) * 0.07
+                        Circle().fill(on ? Look.key : Look.dotOff).frame(width: on ? 15 : 12, height: on ? 15 : 12)
+                            .frame(width: 15, height: 15)
+                    }
+                }
+            }
+        }
+    }
+}
+
