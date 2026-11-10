@@ -338,3 +338,27 @@ struct Figures: View {
     }
 }
 
+/// Numbered steps, arriving one at a time.
+struct Steps: View {
+    let t: Double
+    let cue: Cue
+    let steps: [String]
+    /// Seconds before the first step, and between one step and the next.
+    var lead = 0.6
+    var pace = 1.2
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 30) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                HStack(alignment: .firstTextBaseline, spacing: 26) {
+                    Text("\(index + 1)").font(Look.figure(46)).foregroundStyle(Look.key).frame(width: 34, alignment: .leading)
+                    Text(step).font(.system(size: 46, weight: .medium)).foregroundStyle(Look.ink).fixedSize()
+                }
+                .lift(t, cue, delay: lead + Double(index) * pace)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.leading, Look.margin)
+        .padding(.top, 330)
+    }
+}
