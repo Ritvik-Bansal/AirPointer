@@ -134,3 +134,37 @@ function wells(x, y, z) {
   return smin(smin(bore, bowl, 2.4), rest, 1.8)
 }
 
+// --- The parts -------------------------------------------------------------------------
+
+/// The lower part of the case.
+export function body(x, y, z) {
+  const whole = shell(x, y, z)
+  const s = whole + scoop(x, y, z)
+  let d = smax(s, y - BODY_TOP, 0.3)
+  const inside = whole + DIM.wall
+  const deck = smax(inside, (BODY_TOP - 1.0) - y, 0.7)
+  const hollow = smin(deck, smax(wells(x, y, z), inside, 0.8), 1.0)
+  d = smax(d, -hollow, 0.36)
+  d = smax(d, -hingePocket(x, y, z), 0.1)
+  d = smax(d, -lanyardPocket(x, y, z), 0.12)
+  d = smax(d, -portHole(x, y, z), 0.16)
+  d = smax(d, -smallHoles(x, y, z), 0.1)
+  return d
+}
+
+/// The lid, in the closed position.
+export function lid(x, y, z) {
+  const whole = shell(x, y, z)
+  const s = whole + scoop(x, y, z)
+  let d = smax(s, LID_BOTTOM - y, 0.3)
+  const inside = whole + DIM.wall
+  const step = smax(inside, y - (LID_BOTTOM + 0.55), 0.7)
+  const bowl = smax(
+    superEllipsoid(Math.abs(x) - 14.35, y - (LID_BOTTOM + 0.2), z + 0.15, 12.55, 11.3, 8.55, 2.5),
+    whole + 1.25, 0.8
+  )
+  d = smax(d, -smin(step, bowl, 1.3), 0.36)
+  d = smax(d, -hingePocket(x, y, z), 0.1)
+  return d
+}
+
