@@ -189,3 +189,55 @@ function halton(index, base) {
   return r
 }
 
+const FINISH = /* glsl */`
+  uniform sampler2D tMap, tOver;
+  uniform float uHasOver, uExposure, uFade, uSeed, uGrain, uContrast, uSaturation, uVignette;
+  uniform vec2 uSize;
+  varying vec2 vUv;
+
+  // Khronos PBR Neutral: leaves colours alone until they are nearly white, then rolls them off.
+  vec3 neutral(vec3 color) {
+    const float start = 0.8 - 0.04;
+    const float desaturation = 0.15;
+    float x = min(color.r, min(color.g, color.b));
+    float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+    color -= offset;
+    float peak = max(color.r, max(color.g, color.b));
+    if (peak < start) return color;
+    float d = 1.0 - start;
+    float newPeak = 1.0 - d * d / (peak + d - start);
+    color *= newPeak / peak;
+    float g = 1.0 - 1.0 / (desaturation * (peak - newPeak) + 1.0);
+    return mix(color, vec3(newPeak), g);
+  }
+  vec3 toDisplay(vec3 c) {
+    return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+  }
+  float hash(vec2 p) {
+    vec3 q = fract(vec3(p.xyx) * 0.1031);
+    q += dot(q, q.yzx + 33.33);
+    return fract((q.x + q.y) * q.z);
+  }
+
+  void main() {
+    vec3 c = texture2D(tMap, vUv).rgb * uExposure;
+    // The corners fall off a little, as through a real lens.
+    vec2 centred = (vUv - 0.5) * vec2(uSize.x / uSize.y, 1.0);
+    c *= 1.0 - uVignette * smoothstep(0.35, 1.05, length(centred));
+    c = neutral(c);
+    c = toDisplay(clamp(c, 0.0, 1.0));
+    // Grade, in display space: a touch more contrast about mid-grey, a touch more colour.
+    c = clamp((c - 0.5) * uContrast + 0.5 + 0.012, 0.0, 1.0);
+    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    c = clamp(mix(vec3(luma), c, uSaturation), 0.0, 1.0);
+    // Grain, strongest in the mid-tones, which also hides banding in the dark.
+    float n = hash(gl_FragCoord.xy + uSeed * 17.0) + hash(gl_FragCoord.yx * 1.3 + uSeed * 29.0) - 1.0;
+    c += n * uGrain * (0.35 + 0.65 * (1.0 - abs(2.0 * luma - 1.0)));
+    c *= uFade;
+    if (uHasOver > 0.5) {
+      vec4 over = texture2D(tOver, vUv);
+      c = c * (1.0 - over.a) + over.rgb;
+    }
+    gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+  }
+`
