@@ -280,3 +280,41 @@ export const WINDOWS = [
   // The long grille down the back of the head.
   makeWindow('back', HEAD.x - HEAD.a * Math.sqrt(1 - ((24.2 - HEAD.y) / HEAD.b) ** 2 - 0.05), 24.2, -HEAD.c * Math.sqrt(0.05), [0, 1, 0], 4.3, 1.75, 'mesh'),
 ]
+// --- What gets baked -------------------------------------------------------------------
+
+const leftBud = (x, y, z) => { const p = caseToBud(x, y, z); return bud(p[0], p[1], p[2]) }
+const leftTip = (x, y, z) => { const p = caseToBud(x, y, z); return tip(p[0], p[1], p[2]) }
+/// Everything in the open case below the lid, for working out where light cannot reach.
+function docked(x, y, z) {
+  const ax = -Math.abs(x)
+  return Math.min(body(x, y, z), leftBud(ax, y, z), leftTip(ax, y, z))
+}
+/// The same seen from an AirPod's own axes.
+function dockedFromBud(x, y, z) {
+  const p = budToCase(x, y, z)
+  return docked(p[0], p[1], p[2])
+}
+
+const B = DIM
+export const PARTS = [
+  { name: 'body', field: body, bounds: [-B.W - 0.6, -B.H - 0.6, -B.D - 0.6, B.W + 0.6, BODY_TOP + 0.8, B.D + 0.6], cell: [0.2, 0.5], occluder: docked },
+  { name: 'lid', field: lid, bounds: [-B.W - 0.6, LID_BOTTOM - 0.8, -B.D - 0.6, B.W + 0.6, B.H + 0.6, B.D + 0.6], cell: [0.2, 0.5], occluder: lid },
+  { name: 'hingeBody', field: hingeBody, bounds: [-15, SEAM - 3.2, -B.D - 0.5, 15, SEAM + 4.4, -B.D + 3.6], cell: [0.09, 0.2], occluder: (x, y, z) => Math.min(hingeBody(x, y, z), body(x, y, z)) },
+  { name: 'hingeLid', field: hingeLid, bounds: [-15, SEAM - 0.5, -B.D - 0.5, 15, SEAM + 4.4, -B.D + 3.4], cell: [0.09, 0.2], occluder: (x, y, z) => Math.min(hingeLid(x, y, z), lid(x, y, z)) },
+  { name: 'lanyard', field: lanyard, bounds: [B.W - 1.4, LANYARD.y - 3.8, -2.6, B.W + 0.4, LANYARD.y + 3.8, 2.6], cell: [0.06, 0.15], occluder: lanyard },
+  { name: 'port', field: port, bounds: [-5.4, -B.H - 0.4, -2.3, 5.4, -B.H + PORT.depth + 0.3, 2.3], cell: [0.07, 0.15], occluder: (x, y, z) => Math.min(port(x, y, z), portCore(x, y, z)) },
+  { name: 'portCore', field: portCore, bounds: [-5.4, -B.H + 0.2, -2.3, 5.4, -B.H + PORT.depth + 0.6, 2.3], cell: [0.09, 0.2], occluder: (x, y, z) => Math.min(port(x, y, z), portCore(x, y, z)) },
+  { name: 'bud', field: bud, bounds: [-4.6, -0.8, -9, 16.5, 31.6, 9], cell: [0.16, 0.4], occluder: dockedFromBud },
+  { name: 'tip', field: tip, bounds: [12.5, 13, -7.5, 24.5, 27.5, 8.5], cell: [0.14, 0.35], occluder: dockedFromBud },
+]
+
+/// Placement of the left AirPod's own axes inside the case, as a column-major 4x4.
+export function budMatrix() {
+  const c = Math.cos(LEAN), s = Math.sin(LEAN)
+  return [1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, BUD_HOME.x, BUD_HOME.y, BUD_HOME.z, 1]
+}
+
+/// The hidden status light: on the front, below the lid line.
+export const LIGHT = { x: 0, y: SEAM - 5.3, z: DIM.D, radius: 0.85 }
+/// The two lines printed on the back under the hinge.
+export const PRINT = { y: SEAM - 4.35, z: -DIM.D, lines: ['Designed by Apple in California', 'Assembled in China'], width: 16.2, pitch: 1.75 }
