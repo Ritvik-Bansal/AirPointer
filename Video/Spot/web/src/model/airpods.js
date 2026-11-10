@@ -192,3 +192,20 @@ export function lanyard(x, y, z) {
   return d
 }
 
+/// The metal liner of the port.
+export function port(x, y, z) {
+  const outer = stadium2(x, z, PORT.half, PORT.r + PORT.liner)
+  const inner = stadium2(x, z, PORT.half, PORT.r)
+  let d = smax(outer, -inner, 0.1)
+  d = smax(d, (-DIM.H + 0.05) - y, 0.16)
+  d = Math.max(d, y - (-DIM.H + PORT.depth - 0.1))
+  return d
+}
+
+/// The tongue inside the port and the floor behind it.
+export function portCore(x, y, z) {
+  const tongue = roundBox(x, y - (-DIM.H + 2.6), z, 3.3, 1.9, 0.36, 0.2)
+  const floor = Math.max(stadium2(x, z, PORT.half, PORT.r + 0.1), Math.abs(y - (-DIM.H + 4.7)) - 0.3)
+  return Math.min(tongue, floor)
+}
+
