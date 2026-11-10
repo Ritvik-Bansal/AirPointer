@@ -155,3 +155,112 @@ function topBar(ctx, W, t) {
   ctx.fill()
 }
 
+// --- The stage: the dot screen, the case, the status line ------------------------------
+
+const COLS = 40, ROWS = 26
+
+function stage(ctx, t, dx, mini) {
+  const live = T.pointing(t)
+  ctx.save()
+  ctx.translate(dx, 0)
+
+  // The dot screen: a miniature of the display. The dot under the cursor is lit, it leaves
+  // a short trail, and each tap sends out a ring.
+  const sx = 261.6, sy = 53.6, sw = 356.8, sh = 243.6
+  ctx.save()
+  if (live) {
+    ctx.shadowColor = rgba(C.key, 0.32)
+    ctx.shadowBlur = 14 * UI.scale
+  }
+  roundRect(ctx, sx, sy, sw, sh, 20)
+  ctx.fillStyle = C.panel
+  ctx.fill()
+  ctx.restore()
+  roundRect(ctx, sx + 0.75, sy + 0.75, sw - 1.5, sh - 1.5, 19.25)
+  ctx.strokeStyle = live ? C.key : C.hairline
+  ctx.lineWidth = live ? 1.5 : 1
+  ctx.stroke()
+
+  const cellW = (sw - 28) / COLS, cellH = (sh - 28) / ROWS
+  const here = T.cursor(t)
+  const cu = here.x / UI.width * COLS - 0.5, cv = here.y / UI.height * ROWS - 0.5
+  const trail = []
+  for (let k = 1; k <= 25; k++) {
+    const when = t - k / 60
+    const p = T.cursor(when)
+    trail.push({ u: p.x / UI.width * COLS - 0.5, v: p.y / UI.height * ROWS - 0.5, age: (k / 60) / 0.42 })
+  }
+  const rings = T.TAPS.filter(tap => t >= tap && t < tap + 0.6).map(tap => {
+    const p = T.cursor(tap)
+    return { u: p.x / UI.width * COLS - 0.5, v: p.y / UI.height * ROWS - 0.5, life: (t - tap) / 0.6 }
+  })
+  ctx.fillStyle = C.dotOff
+  ctx.beginPath()
+  const lit = []
+  for (let j = 0; j < ROWS; j++) {
+    for (let i = 0; i < COLS; i++) {
+      const d2 = (i - cu) ** 2 + (j - cv) ** 2
+      let glow = 0
+      if (live) {
+        glow = Math.exp(-d2 / 3.1)
+        for (const p of trail) {
+          if (p.age >= 1) continue
+          const t2 = (i - p.u) ** 2 + (j - p.v) ** 2
+          if (t2 < 9) glow = Math.max(glow, 0.6 * (1 - p.age) * Math.exp(-t2 / 1.6))
+        }
+      }
+      for (const ring of rings) {
+        const radius = 1.2 + 8.5 * (1 - (1 - ring.life) ** 3)
+        const dist = Math.hypot(i - ring.u, j - ring.v)
+        glow = Math.max(glow, (1 - ring.life) * Math.exp(-((dist - radius) ** 2) / 1.1))
+      }
+      const x = sx + 14 + (i + 0.5) * cellW, y = sy + 14 + (j + 0.5) * cellH
+      if (glow > 0.03) lit.push([x, y, glow])
+      else if (!live && d2 < 1.2) lit.push([x, y, -1])
+      else { ctx.moveTo(x + 1.5, y); ctx.arc(x, y, 1.5, 0, Math.PI * 2) }
+    }
+  }
+  ctx.fill()
+  for (const [x, y, glow] of lit) {
+    if (glow < 0) {
+      ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.fillStyle = C.inkSoft; ctx.fill()
+      continue
+    }
+    const r = 1.5 + 2.0 * glow
+    if (glow > 0.45) {
+      ctx.beginPath(); ctx.arc(x, y, r + 3, 0, Math.PI * 2); ctx.fillStyle = rgba(C.key, 0.16 * glow); ctx.fill()
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = C.dotOff; ctx.fill()
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = rgba(C.key, Math.min(1, glow * 1.25)); ctx.fill()
+  }
+
+  // The case, mirrored from the hand. A ring spreads behind it on every tap.
+  const cx = 440, cy = 407
+  for (const tap of T.TAPS) {
+    const age = t - tap
+    if (age < 0 || age > 0.6) continue
+    const k = 1 - (1 - age / 0.6) ** 3
+    ctx.beginPath()
+    ctx.arc(cx, cy - 6, 70 + 52 * k, 0, Math.PI * 2)
+    ctx.strokeStyle = rgba(C.key, 0.85 * (1 - age / 0.6))
+    ctx.lineWidth = 4
+    ctx.stroke()
+  }
+  ctx.save()
+  ctx.filter = `blur(${10 * UI.scale}px)`
+  ctx.fillStyle = 'rgba(0, 3, 8, 0.85)'
+  ctx.beginPath()
+  ctx.ellipse(cx, cy + 82, 83, 9.5, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+  if (mini) ctx.drawImage(mini, cx - 150, cy - 115.5 + 6, 300, 231)
+
+  // What the pointer is doing, and what to do about it (StatusLine).
+  const head = live ? 'Pointing' : t < T.CUE.lidOpens + 0.35 || t > T.CUE.lidShuts ? 'Asleep' : 'Waking'
+  const detail = live ? 'Two taps on the back click. One tap right-clicks.'
+    : head === 'Asleep' ? 'Open the case lid, with both AirPods inside.' : 'Checking the AirPods are in the case, not in your ears.'
+  text(ctx, head, cx, 521.5, `700 30px ${ROUND}`, C.ink, 'center')
+  text(ctx, detail, cx, 552.5, `400 14px ${TEXT}`, C.inkSoft, 'center')
+  ctx.restore()
+}
+
