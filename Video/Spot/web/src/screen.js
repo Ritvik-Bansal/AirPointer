@@ -291,3 +291,119 @@ function tabBar(ctx, t) {
   })
 }
 
+// --- The Feel panel --------------------------------------------------------------------
+
+function feelPanel(ctx, t, open) {
+  const P = UI.panel
+  ctx.save()
+  ctx.globalAlpha = Math.min(1, open * 1.15)
+  ctx.translate((1 - open) * 448, 0)
+  ctx.save()
+  ctx.shadowColor = 'rgba(0, 2, 8, 0.45)'
+  ctx.shadowBlur = 16 * UI.scale
+  ctx.shadowOffsetY = 8 * UI.scale
+  roundRect(ctx, P.x, P.y, P.w, P.h, 22)
+  ctx.fillStyle = C.panel
+  ctx.fill()
+  ctx.restore()
+  roundRect(ctx, P.x + 0.5, P.y + 0.5, P.w - 1, P.h - 1, 21.5)
+  ctx.strokeStyle = rgba(C.key, 0.7)
+  ctx.lineWidth = 1
+  ctx.stroke()
+
+  const left = 454.4, right = 839.2
+  text(ctx, 'How the cursor answers your hand', left, 86, `700 20px ${ROUND}`, C.ink)
+
+  const speed = T.speed(t)
+  const rows = [
+    { y: 122.4, title: 'Speed', value: `${speed.toFixed(1)}×`, at: (speed - 0.4) / 2.1, low: 'Slow', high: 'Fast', detail: 'How far the cursor goes for the same turn of the wrist.' },
+    { y: 197.6, title: 'Flick boost', value: '70%', at: 0.7, low: 'Even', high: 'Flick', detail: 'Extra reach when you move fast; a slow hand stays precise.' },
+    { y: 272, title: 'Steadiness', value: '50%', at: 0.5, low: 'Raw', high: 'Steady', detail: 'How firmly small shakes are ignored. Higher is calmer.' },
+  ]
+  for (const row of rows) {
+    text(ctx, row.title, left, row.y, `600 14px ${TEXT}`, C.ink)
+    text(ctx, row.value, right, row.y, `500 13px ${ROUND}`, C.key, 'right')
+    const y = row.y + 21.6
+    text(ctx, row.low, left, y, `400 12.5px ${TEXT}`, C.inkSoft)
+    text(ctx, row.high, right, y, `400 12.5px ${TEXT}`, C.inkSoft, 'right')
+    const x0 = P.trackFrom, x1 = P.trackFrom + P.trackWidth
+    const knob = x0 + 12 + (x1 - x0 - 24) * row.at
+    ctx.lineCap = 'round'
+    ctx.lineWidth = 5
+    ctx.strokeStyle = '#33414E'
+    ctx.beginPath(); ctx.moveTo(x0 + 2.5, y); ctx.lineTo(x1 - 2.5, y); ctx.stroke()
+    ctx.strokeStyle = C.key
+    ctx.beginPath(); ctx.moveTo(x0 + 2.5, y); ctx.lineTo(knob, y); ctx.stroke()
+    ctx.save()
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)'
+    ctx.shadowBlur = 5 * UI.scale
+    ctx.shadowOffsetY = 1.5 * UI.scale
+    roundRect(ctx, knob - 12.5, y - 9, 25, 18, 9)
+    ctx.fillStyle = '#F2F5F8'
+    ctx.fill()
+    ctx.restore()
+    text(ctx, row.detail, left, row.y + 43.2, `400 12.5px ${TEXT}`, C.inkSoft)
+  }
+
+  // Cursor speed against hand speed, with a dot riding the curve at the speed the hand is
+  // moving now (ResponseCurve; the numbers are PointerPreferences.engineSettings).
+  const gx = left, gy = 340, gw = right - left, gh = 83
+  const base = 24 * speed, spread = Math.sqrt(1 + 5 * 0.7)
+  const gainSlow = base / spread, gainFast = base * spread
+  const floor = 0.26, tighten = 1.65
+  const cursorSpeed = hand => {
+    const s = Math.min(Math.max((hand - 2) / 108, 0), 1)
+    const gain = gainSlow + (gainFast - gainSlow) * s * s * (3 - 2 * s)
+    const release = Math.min(Math.max((hand - floor) / (tighten - floor), 0), 1)
+    return hand * gain * release / 1512
+  }
+  const px = hand => gx + hand / 200 * gw
+  const py = hand => gy + gh - 6 - Math.min(cursorSpeed(hand) / 9.5, 1) * (gh - 12)
+  ctx.strokeStyle = C.hairline
+  ctx.lineWidth = 1
+  ctx.lineCap = 'butt'
+  ctx.beginPath()
+  ctx.moveTo(gx, gy + gh - 0.5); ctx.lineTo(gx + gw, gy + gh - 0.5)
+  for (let q = 1; q <= 3; q++) { ctx.moveTo(gx + gw * q / 4, gy + gh - 5); ctx.lineTo(gx + gw * q / 4, gy + gh) }
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(px(0), py(0))
+  for (let step = 1; step <= 100; step++) ctx.lineTo(px(step * 2), py(step * 2))
+  ctx.lineTo(gx + gw, gy + gh - 1)
+  ctx.lineTo(gx, gy + gh - 1)
+  ctx.closePath()
+  ctx.fillStyle = rgba(C.key, 0.10)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.moveTo(px(0), py(0))
+  for (let step = 1; step <= 100; step++) ctx.lineTo(px(step * 2), py(step * 2))
+  ctx.strokeStyle = C.key
+  ctx.lineWidth = 2.5
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.stroke()
+  if (T.pointing(t)) {
+    const hand = Math.min(T.handSpeed(t), 200)
+    ctx.beginPath(); ctx.arc(px(hand), py(hand), 9, 0, Math.PI * 2); ctx.fillStyle = rgba(C.key, 0.2); ctx.fill()
+    ctx.beginPath(); ctx.arc(px(hand), py(hand), 5, 0, Math.PI * 2); ctx.fillStyle = C.key; ctx.fill()
+  }
+  text(ctx, 'Still', left, 434.5, `400 12.5px ${TEXT}`, C.inkSoft)
+  text(ctx, 'Hand speed', (left + right) / 2, 434.5, `400 12.5px ${TEXT}`, C.inkSoft, 'center')
+  text(ctx, 'Fast flick', right, 434.5, `400 12.5px ${TEXT}`, C.inkSoft, 'right')
+
+  text(ctx, 'Twist to scroll', left, 465.6, `600 14px ${TEXT}`, C.ink)
+  text(ctx, 'Turn the case like a dial. The cursor holds', left, 483.6, `400 12.5px ${TEXT}`, C.inkSoft)
+  text(ctx, 'still meanwhile.', left, 499, `400 12.5px ${TEXT}`, C.inkSoft)
+  roundRect(ctx, 786.4, 469.6, 52.8, 22.4, 11.2)
+  ctx.fillStyle = '#33414E'
+  ctx.fill()
+  roundRect(ctx, 788.4, 471.6, 30, 18.4, 9.2)
+  ctx.fillStyle = '#DDE3E9'
+  ctx.fill()
+
+  // The way back is offered once something has been changed.
+  const changed = Math.abs(speed - 1) > 0.02
+  text(ctx, 'Put the feel back to how it came', 824.8, 536, `600 13px ${ROUND}`, changed ? C.key : rgba(C.inkSoft, 0.45), 'right')
+  ctx.restore()
+}
+
