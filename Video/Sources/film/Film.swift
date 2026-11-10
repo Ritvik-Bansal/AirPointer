@@ -449,6 +449,53 @@ final class Film {
             .padding(.bottom, 84)
     }
 
+    // MARK: What each chapter adds
+
+    @ViewBuilder
+    private func extras(_ t: Double) -> some View {
+        switch t {
+        case At.sensors..<At.gravity:
+            let cue = Cue(start: At.sensors + 1.3, end: At.gravity - 0.15)
+            let place = placement(t)
+            let size = CGSize(width: (baseSize.width * place.scale).rounded(), height: (baseSize.height * place.scale).rounded())
+            let origin = CGPoint(x: place.centre.x - size.width / 2, y: place.centre.y - size.height / 2)
+            let airPod = caseRenderer.pictured(CaseRenderer.Spot.airPod, size: size)
+            let body = caseRenderer.pictured(CaseRenderer.Spot.body, size: size)
+            let a = CGPoint(x: origin.x + airPod.x, y: origin.y + airPod.y)
+            let b = CGPoint(x: origin.x + body.x, y: origin.y + body.y)
+            Callout(t: t, cue: cue, anchor: a, elbow: CGPoint(x: a.x - 64, y: 250), end: CGPoint(x: a.x - 130, y: 250),
+                    text: "gyroscope and accelerometer", trailing: true)
+            Callout(t: t, cue: cue, delay: 1.2, anchor: b, elbow: CGPoint(x: b.x - 60, y: 952), end: CGPoint(x: b.x - 130, y: 952),
+                    text: "no sensor a Mac can read", trailing: true)
+        case At.gravity..<At.jolt:
+            let g = t - At.gravity
+            let place = placement(t)
+            AxisDiagram(
+                centre: CGPoint(x: place.centre.x, y: place.centre.y + 28),
+                appear: span(g, from: 0.6, over: 0.7),
+                turnDrawn: span(g, from: 1.2, over: 0.7),
+                turning: span(g, from: 1.8, over: 0.4) * (1 - span(g, from: 4.3, over: 0.4)),
+                tiltDrawn: span(g, from: 5.0, over: 0.7),
+                tilting: span(g, from: 5.6, over: 0.4) * (1 - span(g, from: 7.8, over: 0.4)),
+                out: span(t, from: At.jolt - 0.45, over: 0.3)
+            )
+        case At.jolt..<At.proof:
+            SignalDisplay(
+                take: strip, length: strip.length,
+                head: span(t, from: stripStart, over: strip.length),
+                appear: span(t, from: At.jolt + 0.8, over: 1.0)
+            )
+            .opacity(1 - span(t, from: At.proof - 0.45, over: 0.3))
+            .position(x: Look.margin + SignalDisplay.size.width / 2, y: 556 + SignalDisplay.size.height / 2)
+        case At.proof..<At.setup:
+            Figures(t: t, cue: Cue(start: At.proof + 0.3, end: At.setup - 0.15))
+        case At.setup..<At.end:
+            Steps(t: t, cue: Cue(start: At.setup + 0.3, end: At.end - 0.15),
+                  steps: ["Turn off Automatic Ear Detection.", "Open the lid.", "Point."])
+        default:
+            EmptyView()
+        }
+    }
 }
 
 extension Take {
