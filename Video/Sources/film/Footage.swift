@@ -249,3 +249,43 @@ final class ClipReader {
     }
 }
 
+/// A filmed clip in its frame, or the card that holds its place.
+struct FootageView: View {
+    let slot: Footage.Slot
+    let image: CGImage?
+    /// Seconds into the slot.
+    let local: Double
+
+    var body: some View {
+        let rect = Footage.frame
+        // The frame opens from a line across the middle and closes back to it. It is solid
+        // from its first moment, so what is behind it is covered and never seen through it.
+        let open = glide(span(local, from: 0, over: 0.5)) * (1 - glide(span(local, from: slot.duration - 0.45, over: 0.45)))
+        let height = rect.height * open
+        let shape = RoundedRectangle(cornerRadius: min(30, height / 2), style: .continuous)
+        ZStack {
+            if let image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .frame(width: rect.width, height: rect.height)
+            } else {
+                // The card says outright that it is standing in for something, so that a
+                // first cut shown to anyone else is not mistaken for the finished film.
+                Look.panel
+                VStack(spacing: 0) {
+                    Text("Clip \(slot.name)").font(Look.label).foregroundStyle(Look.key)
+                    Text(slot.title).font(Look.headline(60)).tracking(-0.7).foregroundStyle(Look.ink).padding(.top, 18)
+                    Text(slot.brief).font(Look.sub).foregroundStyle(Look.soft).padding(.top, 16)
+                    Text(String(format: "Footage to come, %.1f seconds", slot.duration))
+                        .font(Look.small).foregroundStyle(Look.soft).padding(.top, 54)
+                }
+                .multilineTextAlignment(.center)
+            }
+        }
+        .frame(width: rect.width, height: rect.height)
+        .mask(shape.frame(width: rect.width, height: height))
+        .overlay(shape.strokeBorder(Look.hairline, lineWidth: 2).frame(width: rect.width, height: height))
+        .opacity(height > 2 ? 1 : 0)
+        .position(x: rect.midX, y: rect.midY)
+    }
+}
