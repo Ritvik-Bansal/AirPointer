@@ -455,3 +455,41 @@ Two stretches are given over to clips the user films: slot A at 11.8 s and slot 
 
 While a slot has no clip, its frame shows a card on `panel`, centred: the slot's name in Label and `key`, its title in bold rounded 60 px, one sentence saying what to film, and "Footage to come, 6.5 seconds". The card says outright that it is standing in for something, so a first cut is not mistaken for the finished film. It is a production note, not part of the film's design: it disappears when the clips arrive and nothing else should be built on it.
 
+### Named Rules
+
+**The Only-The-Case-Is-Lit Rule.** No gradients, no glows, no shadows. Every surface the film draws is a flat fill or a stroke. The only shading in the frame is light on the 3D case (and whatever is in a filmed clip). Lit dots are marks, not glows.
+
+**The Case-Hangs Rule.** With no contact shadow the case is not standing on anything, and it is not drawn as if it were. It is placed by where the chapter needs it, and it may cross the horizon.
+
+**The Case-Travels Rule.** The case is in the frame whenever the film is drawing. It moves between placements on `glide`; it is never faded, cut to, or cut away from. A move that cannot be shown happens behind a clip.
+
+**The Complete-Card Rule.** The first frame and the last frame are complete, legible cards, because they are what a player shows when the film is not playing.
+
+**The 32 Rule.** Nothing is set smaller than 32 px. Embedded in a web page the film is shown at under half its size, and 32 is the least that still reads there.
+
+**The Measured-On-Dots Rule.** Anything measured (the cursor, the signal, a count) is shown on a dot-matrix display of the one kind, not on a line chart or a bar.
+
+**The Replayed-Not-Animated Rule.** Motion presented as real is a recording replayed through the app's engine. Hand-posed motion is used only to explain, and is never captioned as real.
+
+**The Opaque-Clip Rule.** A clip's frame opens from a line and closes to one, between the margins, and is opaque throughout. The stage is never seen through it or dissolved into it.
+
+### Do:
+- **Do** take every colour and text style from `Look`, and every time from `At`.
+- **Do** start every text block at the 150 px margin and keep the case to the right of it.
+- **Do** bring a headline in with `reveal` and everything else that is text with `lift`.
+- **Do** move the case with a new placement and a `glide`, starting just before the chapter that needs it.
+- **Do** show a new measurement on a dot display with the shared face, the screen's dot spacing, and `key` for what was counted.
+- **Do** cut real motion from the recording with `Take.cut`, and say on screen that it is a recording.
+- **Do** re-read the first and last frames after any change to the opening or the end.
+- **Do** keep each chapter to one headline and at most two sentences.
+
+### Don't:
+- **Don't** add a gradient, a glow, a shadow or a blur to anything the film draws, including the dot screen's glow and the contact shadow from the app.
+- **Don't** stand the case on the floor or give it a ground to sit on.
+- **Don't** fade the case in or out, or cut between two views of it.
+- **Don't** set anything smaller than 32 px, or shrink a label to make it fit.
+- **Don't** let anything show through the clip frame, or cross-dissolve into a clip.
+- **Don't** animate by hand something the film presents as the engine's output: a cursor path, a tap, a verdict.
+- **Don't** add a second accent, or use `key` for decoration; it marks what is lit, live or counted.
+- **Don't** treat the placeholder card as a component, or describe the clips, the sound or the chapter order as settled until the user has supplied or confirmed them.
+
