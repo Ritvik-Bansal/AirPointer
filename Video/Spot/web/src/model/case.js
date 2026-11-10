@@ -209,3 +209,106 @@ function printTexture() {
   return texture
 }
 
+/// Builds the case. `level` 0 is the fine mesh for the film, 1 the light one for small views.
+export async function buildCase({ level = 0 } = {}) {
+  const names = ['body', 'lid', 'hingeBody', 'hingeLid', 'lanyard', 'port', 'portCore', 'bud', 'tip']
+  const loaded = await Promise.all(names.map(n => loadGeometry(n, level)))
+  const geo = Object.fromEntries(names.map((n, i) => [n, loaded[i]]))
+
+  const gloss = () => new THREE.MeshPhysicalMaterial({
+    color: 0xefefec, roughness: 0.26, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.03, ior: 1.5,
+  })
+  const materials = {
+    body: extend(gloss(), { light: true, print: true, taps: true }),
+    lid: extend(gloss()),
+    bud: extend(gloss(), { windows: WINDOWS }),
+    tip: extend(new THREE.MeshPhysicalMaterial({
+      color: 0xecece8, roughness: 0.66, metalness: 0, sheen: 0.5, sheenRoughness: 0.55, sheenColor: new THREE.Color(0xffffff),
+    })),
+    hinge: extend(new THREE.MeshPhysicalMaterial({ color: 0xd2d5d9, roughness: 0.44, metalness: 0.45 }), { shade: 0.8 }),
+    trim: extend(new THREE.MeshPhysicalMaterial({ color: 0xdadcdf, roughness: 0.36, metalness: 0.42 }), { shade: 0.8 }),
+    dark: new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.7, metalness: 0 }),
+    grille: new THREE.MeshStandardMaterial({ color: 0x3a3b3e, roughness: 0.55, metalness: 0.8 }),
+  }
+  materials.body.userData.uniforms.uPrint.value = printTexture()
+
+  const root = new THREE.Group()
+  const mesh = (geometry, material, parent = root) => {
+    const m = new THREE.Mesh(geometry, material)
+    m.castShadow = true
+    m.receiveShadow = true
+    parent.add(m)
+    return m
+  }
+  mesh(geo.body, materials.body)
+  mesh(geo.hingeBody, materials.hinge)
+  mesh(geo.lanyard, materials.trim)
+  mesh(geo.port, materials.trim)
+  mesh(geo.portCore, materials.dark)
+
+  // The floors of the small holes: a grille for the speaker and microphone, darkness behind
+  // the lanyard plate.
+  const disc = new THREE.CircleGeometry(1, 20)
+  for (const hx of HOLES) {
+    const floor = new THREE.Mesh(disc, materials.grille)
+    floor.scale.setScalar(0.62)
+    floor.position.set(hx, -DIM.H + 0.75, 0)
+    floor.rotation.x = Math.PI / 2
+    root.add(floor)
+  }
+  for (const side of [-1, 1]) {
+    const floor = new THREE.Mesh(disc, materials.dark)
+    floor.scale.setScalar(1.15)
+    floor.position.set(DIM.W - 2.2, SEAM - 5.7 + side * 1.32, 0)
+    floor.rotation.y = Math.PI / 2
+    root.add(floor)
+  }
+
+  // The lid turns about the hinge line.
+  const pivot = new THREE.Group()
+  pivot.position.set(0, HINGE_AXIS.y, HINGE_AXIS.z)
+  root.add(pivot)
+  const lidHolder = new THREE.Group()
+  lidHolder.position.set(0, -HINGE_AXIS.y, -HINGE_AXIS.z)
+  pivot.add(lidHolder)
+  mesh(geo.lid, materials.lid, lidHolder)
+  mesh(geo.hingeLid, materials.hinge, lidHolder)
+
+  // The AirPods: the right one is the left one mirrored.
+  const pods = []
+  for (const side of [-1, 1]) {
+    const pod = new THREE.Group()
+    pod.matrixAutoUpdate = false
+    pod.matrix.fromArray(budMatrix())
+    if (side > 0) pod.matrix.premultiply(new THREE.Matrix4().makeScale(-1, 1, 1))
+    mesh(geo.bud, materials.bud, pod)
+    mesh(geo.tip, materials.tip, pod)
+    const weave = new THREE.Mesh(disc, materials.dark)
+    weave.scale.setScalar(TIP_MESH.radius)
+    weave.position.fromArray(TIP_MESH.at)
+    weave.lookAt(new THREE.Vector3().fromArray(TIP_MESH.at).add(new THREE.Vector3().fromArray(TIP_MESH.facing)))
+    pod.add(weave)
+    root.add(pod)
+    pods.push(pod)
+  }
+
+  return {
+    root,
+    materials,
+    pods,
+    /// Lid angle in degrees: 0 shut, LID_OPEN fully open.
+    setLid(degrees) { pivot.rotation.x = -degrees * Math.PI / 180 },
+    /// The status light on the front: a colour, already multiplied by its brightness.
+    setLight(color) { materials.body.userData.uniforms.uLight.value.copy(color) },
+    /// Where taps land, in the case's millimetres.
+    setTapPoint(x, y, z) { materials.body.userData.uniforms.uTapAt.value.set(x, y, z) },
+    /// Up to three taps in flight: each an age in seconds and a strength.
+    setTaps(list) {
+      const slots = materials.body.userData.uniforms.uTaps.value
+      for (let i = 0; i < 3; i++) {
+        const tap = list[i]
+        if (tap) slots[i].set(tap.age, tap.strength); else slots[i].set(-1, 0)
+      }
+    },
+  }
+}
