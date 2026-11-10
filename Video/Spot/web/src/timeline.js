@@ -125,3 +125,83 @@ export const screenLevel = t => smoother(span(t, CUE.screenWakes, 0.9))
 /// True while the pointer is live: lid open and AirPods awake.
 export const pointing = t => t > CUE.lidOpens + 0.9 && t < CUE.lidShuts + 0.2
 
+// --- The cursor, and so the case -------------------------------------------------------
+
+// Where the cursor is, in the screen's own points (origin top left). The case is then
+// turned to match: it is always aimed at the cursor.
+const FEEL_PILL = [UI.window.x + 200, UI.window.y + 631]
+/// What the Speed slider is set to by the click in shot 4, and where on its track that is.
+export const SPEED_AFTER = 2.0
+const SPEED_TRACK = [
+  UI.window.x + UI.panel.trackFrom + 12 + (UI.panel.trackWidth - 24) * (SPEED_AFTER - 0.4) / 2.1,
+  UI.window.y + 144,
+]
+const cursorPath = track3([
+  [0.0, [790, 470, 0]],
+  [5.9, [790, 470, 0]],
+  [6.9, [405, 300, 0]],
+  [7.8, [300, 250, 0]],
+  [8.9, [930, 215, 0]],
+  [9.6, [1010, 330, 0]],
+  [10.5, [720, 560, 0]],
+  [11.5, [FEEL_PILL[0] + 6, FEEL_PILL[1] + 3, 0]],
+  [12.0, [FEEL_PILL[0], FEEL_PILL[1], 0]],
+  [16.5, [FEEL_PILL[0], FEEL_PILL[1], 0]],
+  [17.3, [560, 520, 0]],
+  [18.5, [SPEED_TRACK[0] - 22, SPEED_TRACK[1] + 26, 0]],
+  [19.4, [SPEED_TRACK[0], SPEED_TRACK[1], 0]],
+  [20.9, [SPEED_TRACK[0], SPEED_TRACK[1], 0]],
+  [21.6, [735, 420, 0]],
+  [22.3, [1035, 300, 0]],
+  [23.0, [690, 250, 0]],
+  [23.7, [880, 470, 0]],
+  [24.6, [760, 440, 0]],
+  [30.0, [760, 440, 0]],
+])
+export function cursor(t) {
+  const p = cursorPath(t)
+  return { x: p[0], y: p[1] }
+}
+
+/// How fast the hand is turning, in degrees a second (what the app's response curve shows).
+export function handSpeed(t) {
+  const a = aim(t - 1 / 120), b = aim(t + 1 / 120)
+  return Math.hypot(b.yaw - a.yaw, b.pitch - a.pitch) * 60
+}
+
+// How far the case turns to carry the cursor across the whole screen, in degrees.
+const YAW_RANGE = 46, PITCH_RANGE = 28
+/// Where the case is aimed, in degrees: yaw positive to the left, pitch positive upward.
+function aim(t) {
+  const c = cursor(t)
+  return { yaw: (0.5 - c.x / UI.width) * YAW_RANGE, pitch: (0.5 - c.y / UI.height) * PITCH_RANGE }
+}
+
+/// One tap's knock on the case: 1 at the instant, ringing down quickly.
+const knock = age => (age < 0 ? 0 : Math.exp(-age / 0.045) * Math.cos(age * 95))
+
+/// The case: position in metres and turn in degrees.
+export function casePose(t) {
+  const a = aim(t)
+  // Before the lid opens the case is simply presented; it settles into the hand's aim after.
+  const held = smooth(span(t, 3.4, 1.6)) * (1 - smooth(span(t, 25.2, 1.0)))
+  let x = CASE[0] + 0.0012 * wander(t, 1.3)
+  let y = CASE[1] + 0.0016 * wander(t, 4.1)
+  let z = CASE[2] + 0.0012 * wander(t, 7.7)
+  let yaw = a.yaw * held + 0.35 * wander(t * 1.3, 2.2)
+  let pitch = lerp(3, 7, held) + a.pitch * held + 0.3 * wander(t * 1.3, 5.5)
+  let roll = 0.35 * wander(t * 1.1, 9.1)
+  // Taps land on the back of the case and push it forward.
+  for (const tap of TAPS) {
+    const k = knock(t - tap)
+    z += 0.0008 * k
+    pitch -= 0.7 * k
+    yaw += 0.4 * k
+  }
+  return { x, y, z, yaw, pitch, roll }
+}
+
+/// Where a tap lands on the back of the case, in its own millimetres: low, and toward the
+/// side the camera is on, so that the ring it sends out comes round into view.
+export const TAP_AT = { x: -17, y: -6 }
+
