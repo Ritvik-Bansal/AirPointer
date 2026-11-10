@@ -209,3 +209,20 @@ export function portCore(x, y, z) {
   return Math.min(tongue, floor)
 }
 
+/// One AirPod without its ear tip, in its own axes.
+export function bud(x, y, z) {
+  // The stem: very slightly oval, with a flat foot.
+  // (A capsule that ends inside the head: a hard cap there would crease the head's surface.)
+  const stem = smax(capsule(x, y, z / 0.94, 0, -6, 0, 0, 21.5, 0, 3.02), -y, 0.5)
+  // The head: an egg, fuller toward the tip and underneath.
+  const crown = ellipsoid(x - HEAD.x, y - HEAD.y, z, HEAD.a, HEAD.b, HEAD.c)
+  const jaw = ellipsoid(x - 8.3, y - 20.5, z, 6.3, 6.6, 6.45)
+  let d = smin(smin(crown, jaw, 2.6), stem, 4.4)
+  // The short collar the tip clips over.
+  const sx = x - TIP.x, sy = y - TIP.y, sz = z - TIP.z
+  const along = sx * TIP.dx + sy * TIP.dy + sz * TIP.dz
+  const across = Math.sqrt(Math.max(sx * sx + sy * sy + sz * sz - along * along, 0))
+  d = smin(d, Math.max(across - 3.4, along - 3.0, -along - 6), 1.2)
+  return d
+}
+
