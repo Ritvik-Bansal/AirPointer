@@ -539,3 +539,29 @@ The Mac shows a plain desktop (one deep blue, two flat shapes) with the AirPoint
 
 A slow pad on four chords (D minor rising to rest on F), a quiet pulse of eighth notes once the pointer is in use, and one synthesised effect for each thing that happens in the picture: the lid, the light, the screen waking, air for each camera move, a knock for each tap, a small bright click when a pair of taps becomes a click, a chime of four notes under the name. No voice. Mixed to -16 LUFS.
 
+### Named Rules
+
+**The One-Take Rule.** The camera does not cut. A change of subject is a move.
+
+**The Three-Lights Rule.** Blue, amber and the screen. Blue leads; amber is the accent and never the larger.
+
+**The Light-Not-Fill Rule.** Tone comes from light, focus and the lens. No gradient fills, no tinted overlays, no glow painted round anything. The single drawn mark is the tap ring, which is a signal and is not passed off as light.
+
+**The Real-App Rule.** The window on the Mac is the app's design and the app's behaviour. Nothing is shown on it that the app does not do.
+
+**The Cue Rule.** Every sound belongs to something seen, and is placed from the same number in `timeline.js` that draws it.
+
+**The First-And-Last Rule.** The first frame is the lit case and the last is the end card, because those are what a player shows when the spot is not playing.
+
+### Do:
+- **Do** change timing, camera, cursor and words in `timeline.js`, and nowhere else.
+- **Do** keep the subject of a shot in focus and let the rest fall away.
+- **Do** keep the title block to one headline and one line, at the bottom-left margin.
+- **Do** re-read the first frame and the end card after any change to the opening, the ending or the lights.
+
+### Don't:
+- **Don't** add a cut, a cross-fade or a wipe.
+- **Don't** add a fourth colour of light, or let amber outweigh blue.
+- **Don't** paint a gradient, a glow or a vignette onto the picture; if it is not light, focus, the lens or the tap ring, it does not belong.
+- **Don't** show the app doing something it does not do, or caption the case's motion as a recording: here it is choreographed.
+- **Don't** bring this surface's lighting into the flat film, or the film's diagrams into this one.
