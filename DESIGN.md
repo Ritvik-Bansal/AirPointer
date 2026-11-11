@@ -513,3 +513,15 @@ Light has three colours and no others. The app's keyline blue comes from the rig
 
 Every change of tone in the frame is one of three things: light falling on a surface, focus, or the lens (a slight fall-off into the corners, bloom on what is brighter than white, fine grain). Nothing is filled, tinted or titled with a gradient.
 
+### The case
+
+The case and AirPods are a new model, built for this surface: `web/src/model/airpods.js`, in millimetres, from Apple's published sizes and from photographs of a real AirPods Pro 3 case. It carries what the app's simpler case leaves out: the hinge plate and the print under it, the lanyard plate, the port and its holes, the thumb scoop, the hidden status light, the sculpted lid, and AirPods that sit as they really do, tips turned in. The plastic is white with a clear gloss coat; the ear tips are matte; the metal is satin.
+
+The status light is green, as on the real case, and goes out a few seconds after the lid opens, as the real one does. (The app's own case has a keyline-blue light; the spot does not follow it.)
+
+A tap is drawn as a fine ring of keyline blue travelling over the plastic from where the finger landed, low on the back, so that from in front it is seen coming round the side and crossing the face; with it, a small knock of the whole case. It is the one thing in the picture that is drawn rather than lit: a real case shows nothing when tapped. No hand is shown.
+
+### Camera
+
+One camera, no cuts. Each of the five shots ends on the move that begins the next: a pull of focus, an orbit, a push, a pull back. The lens is real: a frame is the average of 96 renders or more with the camera moved across its aperture and the clock across a half-open shutter, so what is off the plane of focus blurs into discs and what moves fast smears. Focus is on the thing the shot is about: the case, or the screen. The one exception is the third shot's landing, where the subject is a tap and the click it makes: there the lens is stopped down and focused between the two, so both hold for the second it takes.
+
