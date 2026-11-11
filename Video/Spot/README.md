@@ -51,3 +51,14 @@ It is a commercial, not a recording, and a few things are simplified:
 - The window on the Mac is a redraw of the app, as above, not a capture of it. The case shown inside that window is the new model; the installed app still draws its earlier, simpler one.
 - There is no voice. The only voices installed on this Mac are the compact system ones, which sound synthetic, and the words are on screen.
 
+## Changing it
+
+| To change | Look in |
+| --- | --- |
+| Timing, the camera, the cursor's path, the words | `web/src/timeline.js` |
+| How the words are set | `web/src/titles.js` |
+| The line on the end card | `--address`, or the default in `web/src/boot.js` |
+| The lights | `web/src/studio.js` (the studio), `web/src/set.js` (the desk and the Mac) |
+| The grade, grain and bloom | the finishing pass at the foot of `web/src/renderer.js` |
+| The case and the AirPods | `web/src/model/airpods.js`; `render.sh` re-bakes when it changes |
+| The sound | `web/src/sound.js` |
