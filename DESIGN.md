@@ -493,3 +493,23 @@ While a slot has no clip, its frame shows a card on `panel`, centred: the slot's
 - **Don't** add a second accent, or use `key` for decoration; it marks what is lit, live or counted.
 - **Don't** treat the placeholder card as a component, or describe the clips, the sound or the chapter order as settled until the user has supplied or confirmed them.
 
+## The Spot
+
+A third surface, and a deliberate opposite of the film above: a 30-second product spot, 1920 by 1080 at 30 frames a second, with sound. It is a Three.js scene (`Video/Spot/web/src`) rendered frame by frame in headless Chrome by `Video/Spot/render.sh`. The brief for it asked for an ultra-premium tech commercial: cinematic tones, vivid light, depth of field, continuous transitions. Where the film is flat, diagrammatic and explains, the spot is lit, photographic and shows. The two do not share a look and are not meant to be cut together.
+
+This section is recorded from the source and from frames of the rendered spot. The storyboard, with every time, is `web/src/timeline.js`; `Video/Spot/README.md` sets it out as a table.
+
+Not confirmed, or not what it may seem:
+- **The address on the end card** (`github.com/Ritvik-Bansal/AirPointer`) is not confirmed until the repository exists. It is one flag: `render.sh --address`.
+- **The sound has not been heard by its maker.** It was built and checked by measurement (levels, spectrogram, cue times), not by ear.
+- **The window on the Mac is a redraw of the app**, from the app's source, not a capture of it, and the case inside that window is the spot's new model, which the app itself does not yet use.
+- **The pointer is simplified**: the cursor is drawn exactly where the case is aimed. The app works from how fast the case turns.
+
+### The studio
+
+Black, and nothing else behind the subject: ground `#020305`, a dark desk that runs off into fog rather than to a horizon and takes a soft pool of light, and the case's shadow, under the case. In it, one white glossy object (the case), and a Mac whose screen is its own light.
+
+Light has three colours and no others. The app's keyline blue comes from the right, the side the camera mostly looks toward: a tall strip the case mirrors along one edge, and a soft blue across the desk behind the subject. Amber (`#FF7A2E`) comes from the left, much smaller and dimmer: it is the blue's opposite, there so that white plastic has two edges, and it is never the larger of the two. Between them the screen glows the cool blue of the app's Dark Mode. White light is a soft key from the front and above, a kicker from behind, and two tall narrow panels the case's flat face mirrors as a hard-edged band: one for the opening, where the band crosses the face before the lid lifts, and one set low for the end card, where the camera looks down.
+
+Every change of tone in the frame is one of three things: light falling on a surface, focus, or the lens (a slight fall-off into the corners, bloom on what is brighter than white, fine grain). Nothing is filled, tinted or titled with a gradient.
+
