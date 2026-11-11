@@ -42,3 +42,12 @@ node tools/render.mjs sound "$WORK/sound.wav" "$@"
 # can simply be started again: frames already drawn are kept if nothing has changed.)
 caffeinate -i node tools/render.mjs film "$WORK/picture.mp4" --scale "$SCALE" --samples "$SAMPLES" "$@"
 
+# Bring the sound to -16 LUFS, or as near as leaves 1 dB under full scale.
+MEASURED=$(ffmpeg -hide_banner -nostats -i "$WORK/sound.wav" -af loudnorm=print_format=json -f null - 2>&1)
+LOUD=$(printf '%s' "$MEASURED" | awk -F'"' '/input_i/ { print $4 }')
+PEAK=$(printf '%s' "$MEASURED" | awk -F'"' '/input_tp/ { print $4 }')
+GAIN=$(awk -v i="$LOUD" -v p="$PEAK" 'BEGIN { g = -16 - i; h = -1 - p; if (h < g) g = h; printf "%.2f", g }')
+ffmpeg -hide_banner -loglevel error -y -i "$WORK/picture.mp4" -i "$WORK/sound.wav" \
+  -map 0:v -map 1:a -c:v copy -af "volume=${GAIN}dB" -c:a aac -b:a 256k -shortest -movflags +faststart "../out/$NAME.mp4"
+echo "Sound: measured $LOUD LUFS, peak $PEAK dBTP; set ${GAIN} dB."
+
