@@ -51,3 +51,7 @@ ffmpeg -hide_banner -loglevel error -y -i "$WORK/picture.mp4" -i "$WORK/sound.wa
   -map 0:v -map 1:a -c:v copy -af "volume=${GAIN}dB" -c:a aac -b:a 256k -shortest -movflags +faststart "../out/$NAME.mp4"
 echo "Sound: measured $LOUD LUFS, peak $PEAK dBTP; set ${GAIN} dB."
 
+# The poster: the end card.
+node tools/render.mjs stills "$WORK" 28.5 --scale "$SCALE" --samples "$SAMPLES" "$@" >/dev/null
+mv "$WORK/t28.50.png" "../out/$NAME-poster.png"
+
