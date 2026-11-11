@@ -91,7 +91,7 @@ The two recordings the defaults were tuned on are in `Packages/PointerKit/Tests/
 
 `Video/` holds two, both made entirely by code.
 
-- **The spot** (`Video/Spot`): 30 seconds, one unbroken take in a dark studio around the case and a Mac, with sound. A Three.js scene rendered frame by frame, with a 3D model of the AirPods Pro 3 case built from its published dimensions and from photographs. `Video/Spot/render.sh` renders it, `Video/Spot/preview.sh` opens it to scrub in the browser, and `Video/Spot/README.md` has the storyboard.
+- **The spot** (`Video/Spot`): 30 seconds, one unbroken take in a dark studio around the case and a Mac, with sound. A Three.js scene rendered frame by frame, with a 3D model of the AirPods Pro 3 case built from its published dimensions and from photographs. The case in the app's window is the same model: `node Video/Spot/tools/export-swift.mjs` writes it into the app as `App/UI/CaseModelData.swift`. `Video/Spot/render.sh` renders the spot, `Video/Spot/preview.sh` opens it to scrub in the browser, and `Video/Spot/README.md` has the storyboard.
 - **The explainer** (`Video`): 76 seconds on how the pointer works, flat and diagrammatic, drawn from the app's own case and from the recordings above replayed through the engine, with two slots for filmed clips. `Video/render.sh` renders it; `Video/README.md` says how, and how the clips go in.
 
 ## Launch arguments for development
