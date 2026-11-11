@@ -15,6 +15,8 @@ Video/Spot/preview.sh         # watch and scrub it in the browser, without rende
 | `airpointer-spot-web.mp4` | The same under 10 MB, the most GitHub accepts as an attachment on a free account. |
 | `airpointer-spot-poster.png` | The end card, for a thumbnail. |
 
+`tools/readme-clip.sh` then makes what the project's README shows at its top: the film as a moving picture without sound (`docs/airpointer-spot.webp`) and a copy of the film to link it to (`docs/airpointer-spot.mp4`). GitHub plays a video in a README only if it was uploaded by hand in the browser; a moving picture needs no upload. It needs `img2webp` (`brew install webp`).
+
 Options: `--4k` for 3840x2160, `--draft` for a quick half-size look, `--samples 192` for more renders averaged into each frame, `--address "github.com/you/AirPointer"` for the line on the end card (`--address ""` leaves it off).
 
 Needs Node 20 or later, Google Chrome and ffmpeg (`brew install node ffmpeg`), on a Mac: the type is the system's own SF faces, read from `/System/Library/Fonts`. A render takes about eight minutes on an M-series Mac with memory to spare, and a good deal longer on one that is short of it (many apps open, deep in swap). Frames are drawn to disk before they are encoded, so a render that is stopped, or that fails part-way, can simply be started again and carries on from where it was. The first run downloads Three.js and a browser driver into `~/Library/Caches/AirPointer/Spot`; nothing heavy is written into this folder.
