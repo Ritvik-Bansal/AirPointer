@@ -23,7 +23,10 @@ rm -rf "$FRAMES"
 mkdir -p "$FRAMES" docs
 ffmpeg -hide_banner -loglevel error -y -i "$FILM" -vf "fps=15,scale=1280:720:flags=lanczos" "$FRAMES/f%04d.png"
 # 67 ms to a frame is 15 frames a second. Quality 65 keeps the dark tones free of banding.
-img2webp -loop 0 -lossy -q 65 -m 4 -d 67 "$FRAMES"/f*.png -o docs/airpointer-spot.webp >/dev/null
+# -kmax 1 stores every frame whole. Left to itself the encoder carries blocks over from one
+# frame to the next wherever they are nearly the same, and on a smooth surface that turns
+# slowly, like the case, those blocks show.
+img2webp -loop 0 -kmax 1 -lossy -q 65 -m 4 -d 67 "$FRAMES"/f*.png -o docs/airpointer-spot.webp >/dev/null
 cp "$WEB" docs/airpointer-spot.mp4
 rm -rf "$FRAMES"
 
