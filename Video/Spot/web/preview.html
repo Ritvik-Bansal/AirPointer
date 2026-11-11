@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirPointer spot: preview</title>
+<style>
+  :root { color-scheme: dark; --ground: #05080c; --panel: #101822; --ink: #eaf2f8; --soft: #9fb2c4; --line: #27343f; --key: #48b9f5; }
+  html, body { margin: 0; height: 100%; background: var(--ground); color: var(--ink); font: 14px/1.4 -apple-system, system-ui, sans-serif; }
+  body { display: grid; grid-template-rows: 1fr auto; }
+  .stage { display: grid; place-items: center; min-height: 0; padding: 16px 16px 0; }
+  canvas { width: min(100%, calc((100vh - 96px) * 16 / 9)); height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; }
+  .bar { display: grid; grid-template-columns: auto 1fr auto auto; gap: 14px; align-items: center; padding: 14px 16px 16px; }
+  button { font: inherit; font-weight: 600; color: #06202f; background: var(--key); border: 0; border-radius: 999px; padding: 8px 18px; min-width: 76px; cursor: pointer; }
+  button:disabled { background: var(--line); color: var(--soft); cursor: default; }
+  input[type=range] { width: 100%; accent-color: var(--key); }
+  .time { font-variant-numeric: tabular-nums; color: var(--soft); min-width: 150px; text-align: right; }
+  select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div class="stage"><canvas id="film"></canvas></div>
+<div class="bar">
+  <button id="play" disabled>Loading</button>
+  <input id="scrub" type="range" min="0" max="30" step="0.01" value="0" aria-label="Position in the film">
+  <label>Quality <select id="quality"><option value="1">Fast</option><option value="6" selected>Better</option><option value="32">Close to final</option></select></label>
+  <div class="time" id="time">0.00 s</div>
+</div>
+<script type="module">
+  // A way to watch and scrub the film without rendering it: the same scene and the same
+  // timeline, drawn live with a few samples a frame.
+  if (!location.search) location.replace(location.pathname + '?scale=0.5&ui=1.5')
+  await import('/src/boot.js')
+  const play = document.getElementById('play'), scrub = document.getElementById('scrub')
+  const quality = document.getElementById('quality'), time = document.getElementById('time')
+  try { await SPOT.ready } catch (error) { time.textContent = String(error.message || error); throw error }
+  const { SHOTS } = await import('/src/timeline.js')
+  const audio = new Audio('data:audio/wav;base64,' + await SPOT.sound())
+  const length = SPOT.frames / SPOT.fps
+  let at = 0, playing = false, began = 0
+  const draw = () => {
+    SPOT.frame(Math.min(SPOT.frames - 1, Math.floor(at * SPOT.fps)), { samples: Number(quality.value) })
+    scrub.value = at
+    const shot = SHOTS.find(s => at >= s.from && at < s.to) || SHOTS[SHOTS.length - 1]
+    time.textContent = `${at.toFixed(2)} s  ·  ${SHOTS.indexOf(shot) + 1} ${shot.name}`
+  }
+  const stop = () => { playing = false; audio.pause(); play.textContent = 'Play' }
+  // The wall clock keeps time and the sound is held to it, so the picture still runs if the
+  // browser will not start the sound.
+  const start = () => {
+    began = performance.now() - at * 1000
+    audio.currentTime = at
+    audio.play().catch(() => {})
+    playing = true
+    play.textContent = 'Pause'
+  }
+  play.onclick = () => {
+    if (playing) return stop()
+    if (at >= length - 0.05) at = 0
+    start()
+  }
+  scrub.oninput = () => { at = Number(scrub.value); if (playing) start(); draw() }
+  quality.onchange = draw
+  const tick = () => {
+    if (playing) {
+      at = Math.min((performance.now() - began) / 1000, length)
+      if (!audio.paused && Math.abs(audio.currentTime - at) > 0.2) audio.currentTime = at
+      if (at >= length - 0.01) stop()
+      draw()
+    }
+    requestAnimationFrame(tick)
+  }
+  play.disabled = false
+  play.textContent = 'Play'
+  draw()
+  tick()
+</script>
+</body>
+</html>
