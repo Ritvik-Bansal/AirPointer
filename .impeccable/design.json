@@ -527,7 +527,8 @@
     "sharedObjects": {
       "case": {
         "source": "App/UI/CaseView.swift (CaseScene), used by the app and, through Video/Sources/film/CaseRender.swift, by the film",
-        "airPods": "Plain white heads in the shell material; no dark vents (a vent on each read as a pair of eyes).",
+        "model": "App/UI/CaseModel.swift unpacks App/UI/CaseModelData.swift, which Video/Spot/tools/export-swift.mjs generates from Video/Spot/web/src/model/airpods.js, the model the spot is rendered from. Regenerated, never edited by hand.",
+        "airPods": "The modelled AirPods Pro 3, docked stems down with ear tips turned in: shell material, matte ear tips, and a black sensor window on each head, baked in as vertex colour.",
         "tapRing": "SCNTube inner 3.42, outer 3.59, constant-lit Theme.keyline, at (0, -0.75, -3.4): behind the case, lowered and widened so it looks the same from the camera. Height 0.76 of width. Scale 0.8 to 1.16, opacity 0.95 falling to 0."
       }
     },
