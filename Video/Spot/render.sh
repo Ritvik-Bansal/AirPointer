@@ -55,3 +55,21 @@ echo "Sound: measured $LOUD LUFS, peak $PEAK dBTP; set ${GAIN} dB."
 node tools/render.mjs stills "$WORK" 28.5 --scale "$SCALE" --samples "$SAMPLES" "$@" >/dev/null
 mv "$WORK/t28.50.png" "../out/$NAME-poster.png"
 
+# The copy for the web: GitHub takes video attachments up to 10 MB on a free account.
+BYTES=$(stat -f %z "../out/$NAME.mp4")
+LIMIT="${AIRPOINTER_WEB_BYTES:-9400000}"
+if [ "$BYTES" -le "$LIMIT" ] && [ "$SCALE" != 2 ]; then
+  cp "../out/$NAME.mp4" "../out/$NAME-web.mp4"
+else
+  SECONDS_LONG=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "../out/$NAME.mp4")
+  PICTURE_KBPS=$(awk -v b="$LIMIT" -v s="$SECONDS_LONG" 'BEGIN { printf "%d", (b * 8 / s / 1000) * 0.95 - 160 }')
+  PICTURE="-vf scale=1920:1080:flags=lanczos -c:v libx264 -preset slow -b:v ${PICTURE_KBPS}k -pix_fmt yuv420p -color_primaries bt709 -color_trc bt709 -colorspace bt709"
+  ffmpeg -hide_banner -loglevel error -y -i "../out/$NAME.mp4" $PICTURE -pass 1 -passlogfile "$WORK/pass" -an -f null /dev/null
+  ffmpeg -hide_banner -loglevel error -y -i "../out/$NAME.mp4" $PICTURE -pass 2 -passlogfile "$WORK/pass" -c:a aac -b:a 160k -movflags +faststart "../out/$NAME-web.mp4"
+fi
+rm -rf "$WORK"
+
+echo
+for f in "../out/$NAME.mp4" "../out/$NAME-web.mp4" "../out/$NAME-poster.png"; do
+  printf "%-40s %6.1f MB\n" "Video/out/$(basename "$f")" "$(stat -f %z "$f" | awk '{ print $1 / 1000000 }')"
+done
