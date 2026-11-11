@@ -876,6 +876,83 @@
         "notCanonized": [
           "The placeholder card and its 'Clip A' line in key above the title: a production note that goes when the clips arrive."
         ]
+      },
+      "spot": {
+        "source": "Video/Spot/web/src",
+        "entry": "Video/Spot/web/src/timeline.js",
+        "render": "Video/Spot/render.sh",
+        "frame": {
+          "width": 1920,
+          "height": 1080,
+          "fps": 30,
+          "seconds": 30
+        },
+        "mode": "Persuade",
+        "shots": [
+          {
+            "name": "Reveal",
+            "from": 0,
+            "to": 5.5
+          },
+          {
+            "name": "Aim",
+            "from": 5.5,
+            "to": 12.5
+          },
+          {
+            "name": "Tap",
+            "from": 12.5,
+            "to": 19
+          },
+          {
+            "name": "Tune",
+            "from": 19,
+            "to": 25
+          },
+          {
+            "name": "Close",
+            "from": 25,
+            "to": 30
+          }
+        ],
+        "palette": {
+          "ground": "#020305",
+          "keyBlue": "#48B9F5",
+          "stripBlue": "#2F9CFF",
+          "amber": "#FF7A2E",
+          "ink": "#F3F7FB",
+          "statusLight": "#7DFFA0"
+        },
+        "type": {
+          "headline": {
+            "family": "SF Rounded",
+            "weight": 700,
+            "size": 88
+          },
+          "sub": {
+            "family": "SF",
+            "weight": 400,
+            "size": 35
+          },
+          "name": {
+            "family": "SF Rounded",
+            "weight": 700,
+            "size": 132
+          },
+          "margin": 128
+        },
+        "rules": [
+          "One-Take",
+          "Three-Lights",
+          "Light-Not-Fill",
+          "Real-App",
+          "Cue",
+          "First-And-Last"
+        ],
+        "unconfirmed": [
+          "end-card address",
+          "sound not auditioned by ear"
+        ]
       }
     }
   },
