@@ -127,3 +127,110 @@ async function draw(page, index, count) {
   return image
 }
 
+const args = process.argv.slice(2)
+const command = args.shift()
+const scale = Number(flag(args, '--scale', 1))
+const samples = flag(args, '--samples', null)
+const address = flag(args, '--address', null)
+const extra = address === null ? '' : `&address=${encodeURIComponent(address)}`
+
+if (command === 'views') {
+  const [folder, file] = args
+  mkdirSync(folder, { recursive: true })
+  const views = JSON.parse(readFileSync(file, 'utf8'))
+  const { page, close } = await open(scale, extra)
+  for (const view of views) {
+    const ms = await page.evaluate(v => window.SPOT.still(v), view)
+    writeFileSync(path.join(folder, view.name + '.png'), await png(page))
+    console.log(`${view.name}  ${Math.round(ms)} ms`)
+  }
+  await close()
+} else if (command === 'stills') {
+  const folder = args.shift()
+  mkdirSync(folder, { recursive: true })
+  const { page, close } = await open(scale, extra)
+  const fps = await page.evaluate(() => window.SPOT.fps)
+  for (const t of args.map(Number)) {
+    const started = Date.now()
+    const name = `t${t.toFixed(2).padStart(5, '0')}.png`
+    writeFileSync(path.join(folder, name), await draw(page, Math.round(t * fps), samples ? Number(samples) : null))
+    console.log(`${name}  ${((Date.now() - started) / 1000).toFixed(1)} s`)
+  }
+  await close()
+} else if (command === 'film') {
+  // Frames are drawn to disk first and encoded afterwards. Encoding while drawing has the
+  // two fight for the processor, and on a Mac running on battery the encoder wins: frames
+  // that take half a second each then take twenty. Drawing to disk also means a run that is
+  // interrupted picks up where it stopped.
+  const out = args.shift()
+  const folder = path.join(path.dirname(out), 'frames')
+  mkdirSync(folder, { recursive: true })
+  // Frames left by an earlier run are kept only if nothing they depend on has changed.
+  const hash = createHash('sha256')
+  const walk = dir => readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).forEach(entry => {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) walk(full); else hash.update(entry.name).update(readFileSync(full))
+  })
+  walk(web)
+  walk(path.join(cache, 'meshes'))
+  const key = hash.update(JSON.stringify([scale, samples, address])).digest('hex')
+  const keyFile = path.join(folder, 'key')
+  if (!existsSync(keyFile) || readFileSync(keyFile, 'utf8') !== key) {
+    for (const name of readdirSync(folder)) rmSync(path.join(folder, name))
+    writeFileSync(keyFile, key)
+  }
+
+  let session = await open(scale, extra)
+  const { fps, frames } = await session.page.evaluate(() => ({ fps: window.SPOT.fps, frames: window.SPOT.frames }))
+  const first = Math.round(Number(flag(args, '--from', 0)) * fps)
+  const last = Math.min(frames, Math.round(Number(flag(args, '--to', frames / fps)) * fps))
+  const file = i => path.join(folder, `f${String(i).padStart(5, '0')}.png`)
+  const started = Date.now()
+  let drawn = 0
+  for (let i = first; i < last; i++) {
+    if (existsSync(file(i))) continue
+    if (lastDigest === null && i > first && existsSync(file(i - 1))) lastDigest = createHash('md5').update(readFileSync(file(i - 1))).digest('hex')
+    for (let attempt = 1; ; attempt++) {
+      try {
+        writeFileSync(file(i) + '.part', await draw(session.page, i, samples ? Number(samples) : null))
+        renameSync(file(i) + '.part', file(i))
+        break
+      } catch (error) {
+        if (attempt >= 5) throw error
+        console.error(`\nframe ${i + 1}: ${String(error.message).split('\n')[0]}. Reopening the browser and trying again.`)
+        try { await session.close() } catch {}
+        session = await open(scale, extra)
+      }
+    }
+    drawn++
+    if (drawn % 30 === 0 || i === last - 1) {
+      const each = (Date.now() - started) / 1000 / drawn
+      process.stdout.write(`\rframe ${i + 1} of ${last}  ${each.toFixed(2)} s each  ${Math.round(each * (last - i - 1))} s to go   `)
+    }
+  }
+  await session.close()
+  console.log(`\nDrew ${drawn} frames in ${Math.round((Date.now() - started) / 1000)} s${drawn < last - first ? ` (${last - first - drawn} were already there)` : ''}.`)
+
+  const encoder = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
+    '-framerate', String(fps), '-start_number', String(first), '-i', path.join(folder, 'f%05d.png'), '-frames:v', String(last - first),
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p',
+    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
+    '-vf', 'scale=out_color_matrix=bt709:out_range=tv', '-movflags', '+faststart', out], { stdio: ['ignore', 'inherit', 'inherit'] })
+  await new Promise((resolve, reject) => { encoder.on('exit', code => code === 0 ? resolve() : reject(new Error(`ffmpeg exited with ${code}`))) })
+  console.log(`Wrote ${out}: ${last - first} frames.`)
+} else if (command === 'sound') {
+  const out = args.shift()
+  const { page, close } = await open(scale, extra)
+  const b64 = await page.evaluate(() => window.SPOT.sound())
+  writeFileSync(out, Buffer.from(b64, 'base64'))
+  await close()
+  console.log(`Wrote ${out}.`)
+} else if (command === 'serve') {
+  const server = await serve()
+  const url = `http://127.0.0.1:${server.address().port}/preview.html`
+  console.log(`The film is at ${url}\nPress Ctrl-C to stop.`)
+  if (!process.env.SPOT_NO_OPEN) spawn('open', [url], { stdio: 'ignore' })
+} else {
+  console.error('usage: render.mjs film|stills|views|sound|serve ... (see the top of this file)')
+  process.exit(1)
+}
