@@ -21,4 +21,4 @@ related_targets: ["Video/Spot/web/src/film.js","Video/Spot/web/src/studio.js","V
 
 **Memorable moment:** the landing of the third shot. The camera comes off its turn round the case and holds the case and the Mac together, both in focus: two rings of light come round the case, and in the same frame the Feel pill takes the click and the panel slides in.
 
-**Unresolved:** the address on the end card is not confirmed until the repository exists (`render.sh --address`). The sound was built and checked by measurement, not by ear, and should be listened to by the user. There is no voice. The app itself still draws its earlier, simpler case; the new model has not been taken into the app.
+**Unresolved:** the address on the end card is not confirmed until the repository exists (`render.sh --address`). The sound was built and checked by measurement, not by ear, and should be listened to by the user. There is no voice.
