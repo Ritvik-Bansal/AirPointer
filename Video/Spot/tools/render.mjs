@@ -108,3 +108,22 @@ async function open(scale, extra = '') {
   return { page, close }
 }
 
+const png = async page => Buffer.from((await page.evaluate(() => window.SPOT.png())).split(',')[1], 'base64')
+
+/// Draws one frame and returns it as a PNG, or throws if the browser did not really draw it.
+/// A browser short of memory can lose its graphics context without raising anything: the
+/// page carries on and every frame after that comes back the same blank picture. Grain
+/// makes every true frame different from the last, so a repeat is proof of a failure.
+let lastDigest = null
+async function draw(page, index, count) {
+  await page.evaluate((n, s) => window.SPOT.frame(n, { samples: s }), index, count)
+  if (await page.evaluate(() => window.SPOT.film.renderer.getContext().isContextLost())) {
+    throw new Error('the browser lost its graphics context')
+  }
+  const image = await png(page)
+  const digest = createHash('md5').update(image).digest('hex')
+  if (digest === lastDigest) throw new Error('the frame came out identical to the one before')
+  lastDigest = digest
+  return image
+}
+
