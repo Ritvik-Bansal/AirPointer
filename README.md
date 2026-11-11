@@ -2,6 +2,10 @@
 
 Turns an AirPods Pro case into a pointer for the Mac. Hold the case like a small remote, aim it, and the cursor follows. Tap the back of the case to click.
 
+[![The AirPointer spot, 30 seconds: an AirPods Pro case opens in a dark studio, is aimed at a Mac to move the cursor, and is tapped twice to click.](docs/airpointer-spot.webp)](docs/airpointer-spot.mp4?raw=true)
+
+The 30-second spot, playing here without its sound. Click it to download the film with sound (9 MB).
+
 It is a menu-bar app. The window is for setting it up and tuning how it feels.
 
 ## Before it will work
@@ -91,7 +95,7 @@ The two recordings the defaults were tuned on are in `Packages/PointerKit/Tests/
 
 `Video/` holds two, both made entirely by code.
 
-- **The spot** (`Video/Spot`): 30 seconds, one unbroken take in a dark studio around the case and a Mac, with sound. A Three.js scene rendered frame by frame, with a 3D model of the AirPods Pro 3 case built from its published dimensions and from photographs. The case in the app's window is the same model: `node Video/Spot/tools/export-swift.mjs` writes it into the app as `App/UI/CaseModelData.swift`. `Video/Spot/render.sh` renders the spot, `Video/Spot/preview.sh` opens it to scrub in the browser, and `Video/Spot/README.md` has the storyboard.
+- **The spot** (`Video/Spot`): 30 seconds, one unbroken take in a dark studio around the case and a Mac, with sound. A Three.js scene rendered frame by frame, with a 3D model of the AirPods Pro 3 case built from its published dimensions and from photographs. The case in the app's window is the same model: `node Video/Spot/tools/export-swift.mjs` writes it into the app as `App/UI/CaseModelData.swift`. `Video/Spot/render.sh` renders the spot, `Video/Spot/preview.sh` opens it to scrub in the browser, and `Video/Spot/README.md` has the storyboard. The moving picture at the top of this page is made from it by `Video/Spot/tools/readme-clip.sh`.
 - **The explainer** (`Video`): 76 seconds on how the pointer works, flat and diagrammatic, drawn from the app's own case and from the recordings above replayed through the engine, with two slots for filmed clips. `Video/render.sh` renders it; `Video/README.md` says how, and how the clips go in.
 
 ## Launch arguments for development
