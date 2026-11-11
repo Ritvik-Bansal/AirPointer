@@ -53,9 +53,9 @@ final class CaseRenderer {
     /// Named places on the case, in the model's units.
     enum Spot {
         /// The crown of the AirPod on the viewer's right.
-        static let airPod = SIMD3<Float>(1.36, 1.72, 0.25)
+        static let airPod = SIMD3<Float>(1.74, 1.9, 0.1)
         /// The front of the body, low on the viewer's left.
-        static let body = SIMD3<Float>(-1.75, -1.05, 1.085)
+        static let body = SIMD3<Float>(-1.75, -1.05, CaseModel.half.z)
         static let centre = SIMD3<Float>(0, 0, 0)
     }
 }
