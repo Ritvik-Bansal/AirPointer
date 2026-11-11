@@ -1,5 +1,7 @@
 # The AirPointer film
 
+(This is the longer explainer. The 30-second spot is a separate film with its own page: `Spot/README.md`.)
+
 A 76-second film about AirPointer, for the top of the GitHub README and for the portfolio. It is drawn frame by frame by the Swift program in `Sources/film`, from the app's own 3D case and from recordings of a real hand replayed through the app's own engine, and written out with ffmpeg.
 
 ```sh
