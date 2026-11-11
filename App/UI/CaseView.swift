@@ -76,6 +76,7 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
     private var dark: Bool?
     var isAwake: Bool { awake == true }
     private let led = SCNMaterial()
+    private let lamp = SCNNode()
     /// Set from the system's Reduce Motion setting: the lid snaps and the tap ring only fades.
     var reduceMotion = false
 
@@ -101,7 +102,9 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         // given once, as light it gives off; given as its surface colour too, the two add up
         // and it renders as a paler, greener blue than the keyline.
         led.emission.contents = on ? NSColor(Theme.keyline) : NSColor.black
-        led.diffuse.contents = on ? NSColor.black : NSColor(white: 0.5, alpha: 1)
+        led.diffuse.contents = NSColor.black
+        // Unlit, the light is not there to see: on the real case it sits behind the plastic.
+        lamp.isHidden = !on
         let angle = on ? openAngle : 0
         lidPivot.removeAllActions()
         if animate {
@@ -134,7 +137,8 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         let on = open > 0.5
         awake = on
         led.emission.contents = on ? NSColor(Theme.keyline) : NSColor.black
-        led.diffuse.contents = on ? NSColor.black : NSColor(white: 0.5, alpha: 1)
+        led.diffuse.contents = NSColor.black
+        lamp.isHidden = !on
     }
 
     /// Sets the tap ring by hand: nil hides it, 0…1 is how far it has spread.
@@ -277,80 +281,50 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         scene.rootNode.addChildNode(aim)
         let rest = aim
 
+        // The case and the AirPods are the model the spot is rendered from (CaseModel): the
+        // real case's size and details, not a rounded box standing in for it.
         let shell = CaseScene.plastic(white: 0.97, roughness: 0.3)
-        let inside = CaseScene.plastic(white: 0.84, roughness: 0.8)
-        let socket = CaseScene.plastic(white: 0.72, roughness: 0.85)
-
-        rest.addChildNode(SCNNode(geometry: CaseMesh.body(material: shell)))
-        // The line where the lid meets the body. It is what makes a shut case read as a
-        // case rather than a pebble.
-        let groove = CaseScene.plastic(white: 0.62, roughness: 0.9)
-        rest.addChildNode(SCNNode(geometry: CaseMesh.seamLine(material: groove)))
-        rest.addChildNode(SCNNode(geometry: CaseMesh.deck(y: CaseMesh.seam - 0.015, facingUp: true, material: inside)))
-
-        // The two AirPods, docked: their heads stand clear of the open top, as they do in
-        // the real case. Left plain: a dark vent on each reads, at any size, as a pair of eyes.
-        for side in [-1.0, 1.0] {
-            let head = SCNSphere(radius: 0.62)
-            head.segmentCount = 40
-            head.materials = [shell]
-            let node = SCNNode(geometry: head)
-            node.position = SCNVector3(side * 1.36, Double(CaseMesh.seam) + 0.4, 0.04)
-            node.scale = SCNVector3(1.02, 1.26, 0.9)
-            node.eulerAngles.z = side * -0.17
-            rest.addChildNode(node)
-
-        }
-
-        // Status light, centred on the front just under the seam.
-        led.lightingModel = .constant
-        let lamp = SCNSphere(radius: 0.1)
-        lamp.materials = [led]
-        let lampNode = SCNNode(geometry: lamp)
-        lampNode.position = SCNVector3(0, Double(CaseMesh.seam) - 0.5, Double(CaseMesh.r) - 0.03)
-        lampNode.scale = SCNVector3(1, 1, 0.4)
-        rest.addChildNode(lampNode)
-
-        // The bottom end: charging port between two rows of speaker holes. Out of sight
-        // until the case is tipped back.
+        let silicone = CaseScene.plastic(white: 0.93, roughness: 0.82)
+        let metal = CaseScene.metal()
         let dark = SCNMaterial()
         dark.lightingModel = .physicallyBased
         dark.diffuse.contents = NSColor(white: 0.16, alpha: 1)
         dark.roughness.contents = 0.6
-        let port = SCNCapsule(capRadius: 0.13, height: 0.96)
-        port.materials = [dark]
-        let portNode = SCNNode(geometry: port)
-        portNode.eulerAngles.z = .pi / 2
-        portNode.position = SCNVector3(0, Double(-CaseMesh.half.y) + 0.105, 0)
-        rest.addChildNode(portNode)
-        for side in [-1.0, 1.0] {
-            for k in 0..<4 {
-                let hole = SCNCylinder(radius: 0.042, height: 0.05)
-                hole.materials = [dark]
-                let node = SCNNode(geometry: hole)
-                node.position = SCNVector3(side * (0.82 + Double(k) * 0.17), Double(-CaseMesh.half.y) + 0.014, 0)
-                rest.addChildNode(node)
-            }
+
+        // The body, and what is let into it: the hinge plate on the back, the lanyard plate
+        // on one side, the port underneath.
+        rest.addChildNode(SCNNode(geometry: CaseModel.geometry("body", material: shell)))
+        rest.addChildNode(SCNNode(geometry: CaseModel.geometry("hingeBody", material: metal)))
+        rest.addChildNode(SCNNode(geometry: CaseModel.geometry("lanyard", material: metal)))
+        rest.addChildNode(SCNNode(geometry: CaseModel.geometry("port", material: metal)))
+        rest.addChildNode(SCNNode(geometry: CaseModel.geometry("portCore", material: dark)))
+
+        // The two AirPods, docked as they really sit: stems down at the outer ends, ear tips
+        // turned in toward each other, the black sensor window on each head facing forward.
+        for right in [false, true] {
+            let pod = SCNNode()
+            pod.simdTransform = CaseModel.podTransform(right: right)
+            pod.addChildNode(SCNNode(geometry: CaseModel.geometry("bud", material: shell, mirrored: right)))
+            pod.addChildNode(SCNNode(geometry: CaseModel.geometry("tip", material: silicone, mirrored: right)))
+            rest.addChildNode(pod)
         }
 
-        // The lid swings back about the hinge on the rear edge, showing its inside.
-        lidPivot.position = SCNVector3(0, Double(CaseMesh.seam), Double(-CaseMesh.r))
+        // Status light, centred on the front under the lid line.
+        led.lightingModel = .constant
+        let bulb = SCNSphere(radius: 0.085)
+        bulb.materials = [led]
+        lamp.geometry = bulb
+        lamp.simdPosition = CaseModel.light - SIMD3<Float>(0, 0, 0.015)
+        lamp.scale = SCNVector3(1, 1, 0.3)
+        rest.addChildNode(lamp)
+
+        // The lid swings back about the hinge line on the rear face, showing its inside. The
+        // two blocks of the hinge plate that belong to it go with it.
+        lidPivot.simdPosition = SIMD3<Float>(0, CaseModel.seam, -CaseModel.half.z)
         rest.addChildNode(lidPivot)
-        let lidOffset = SCNVector3(0, Double(-CaseMesh.seam), Double(CaseMesh.r))
-        let lid = SCNNode(geometry: CaseMesh.lid(material: shell))
-        lid.position = lidOffset
-        lidPivot.addChildNode(lid)
-        let lidInside = SCNNode(geometry: CaseMesh.deck(y: CaseMesh.seam + 0.015, facingUp: false, material: inside))
-        lidInside.position = lidOffset
-        lidPivot.addChildNode(lidInside)
-        // The two hollows the AirPods' heads tuck into.
-        for side in [-1.0, 1.0] {
-            let hollow = SCNSphere(radius: 0.6)
-            hollow.materials = [socket]
-            let node = SCNNode(geometry: hollow)
-            node.position = SCNVector3(side * 1.36, Double(CaseMesh.seam) + 0.02, 0.04)
-            node.scale = SCNVector3(1.0, 0.06, 0.82)
-            node.position = SCNVector3(side * 1.36 + lidOffset.x, Double(CaseMesh.seam) + 0.03 + lidOffset.y, 0.04 + lidOffset.z)
+        for (name, material) in [("lid", shell), ("hingeLid", metal)] {
+            let node = SCNNode(geometry: CaseModel.geometry(name, material: material))
+            node.simdPosition = SIMD3<Float>(0, -CaseModel.seam, CaseModel.half.z)
             lidPivot.addChildNode(node)
         }
 
@@ -364,7 +338,16 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         m.diffuse.contents = NSColor(white: white, alpha: 1)
         m.metalness.contents = 0.0
         m.roughness.contents = roughness
-        m.isDoubleSided = true
+        return m
+    }
+
+    /// Satin metal, for the hinge plate, the lanyard plate and the lining of the port.
+    private static func metal() -> SCNMaterial {
+        let m = SCNMaterial()
+        m.lightingModel = .physicallyBased
+        m.diffuse.contents = NSColor(white: 0.84, alpha: 1)
+        m.metalness.contents = 0.7
+        m.roughness.contents = 0.42
         return m
     }
 
@@ -383,104 +366,5 @@ final class CaseScene: NSObject, SCNSceneRendererDelegate {
         // Bottom of the image is the floor, top is the ceiling.
         context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: height), options: [])
         return context.makeImage()
-    }
-}
-
-/// The case's shell, generated rather than modelled: a box rounded so far that its ends
-/// are half-cylinders, cut across at the lid seam into a body and a lid.
-enum CaseMesh {
-    /// Half-extents: width, height (lid end at +y), depth. Proportions of the real case.
-    static let half = SIMD3<Float>(3.03, 2.26, 1.085)
-    /// Edge radius. Equal to the half-depth, so the sides are fully round.
-    static let r: Float = 1.085
-    /// Height of the lid seam.
-    static let seam: Float = 0.62
-    private static let around = 22
-    private static let over = 14
-
-    private struct Vertex {
-        var position: SIMD3<Float>
-        var normal: SIMD3<Float>
-    }
-
-    /// One loop around the shell at a given tilt of the surface normal.
-    private static func loop(latitude: Float, y: Float) -> [Vertex] {
-        let ix = half.x - r
-        var out: [Vertex] = []
-        for end in [Float(1), Float(-1)] {
-            for k in 0...around {
-                let phi = (end > 0 ? -Float.pi / 2 : Float.pi / 2) + Float.pi * Float(k) / Float(around)
-                let n = SIMD3<Float>(cos(phi) * cos(latitude), sin(latitude), sin(phi) * cos(latitude))
-                out.append(Vertex(position: SIMD3(end * ix + r * n.x, y + r * n.y, r * n.z), normal: n))
-            }
-        }
-        return out
-    }
-
-    private static func geometry(loops: [[Vertex]], material: SCNMaterial) -> SCNGeometry {
-        let vertices = loops.flatMap { $0 }
-        let count = loops[0].count
-        var indices: [UInt32] = []
-        for l in 0..<(loops.count - 1) {
-            for i in 0..<count {
-                let a = UInt32(l * count + i), b = UInt32(l * count + (i + 1) % count)
-                let c = UInt32((l + 1) * count + i), d = UInt32((l + 1) * count + (i + 1) % count)
-                // Wound so each face's front is its outside; the vertex normals point outward too.
-                indices += [a, c, b, b, c, d]
-            }
-        }
-        return make(vertices: vertices, indices: indices, material: material)
-    }
-
-    private static func make(vertices: [Vertex], indices: [UInt32], material: SCNMaterial) -> SCNGeometry {
-        let positions = SCNGeometrySource(vertices: vertices.map { SCNVector3($0.position.x, $0.position.y, $0.position.z) })
-        let normals = SCNGeometrySource(normals: vertices.map { SCNVector3($0.normal.x, $0.normal.y, $0.normal.z) })
-        let element = SCNGeometryElement(indices: indices, primitiveType: .triangles)
-        let g = SCNGeometry(sources: [positions, normals], elements: [element])
-        g.materials = [material]
-        return g
-    }
-
-    /// From the rounded bottom up to the seam.
-    static func body(material: SCNMaterial) -> SCNGeometry {
-        let iy = half.y - r
-        var loops: [[Vertex]] = []
-        for m in 0...over {
-            loops.append(loop(latitude: -Float.pi / 2 + Float.pi / 2 * Float(m) / Float(over), y: -iy))
-        }
-        loops.append(loop(latitude: 0, y: seam))
-        return geometry(loops: loops, material: material)
-    }
-
-    /// From the seam over the rounded top.
-    static func lid(material: SCNMaterial) -> SCNGeometry {
-        let iy = half.y - r
-        var loops: [[Vertex]] = [loop(latitude: 0, y: seam)]
-        for m in 0...over {
-            loops.append(loop(latitude: Float.pi / 2 * Float(m) / Float(over), y: iy))
-        }
-        return geometry(loops: loops, material: material)
-    }
-
-    /// A narrow band round the shell at the seam, standing a hair proud of it.
-    static func seamLine(material: SCNMaterial) -> SCNGeometry {
-        func band(_ y: Float) -> [Vertex] {
-            loop(latitude: 0, y: y).map { Vertex(position: $0.position + $0.normal * 0.008, normal: $0.normal) }
-        }
-        return geometry(loops: [band(seam - 0.028), band(seam + 0.028)], material: material)
-    }
-
-    /// The flat face that closes an open half at the seam.
-    static func deck(y: Float, facingUp: Bool, material: SCNMaterial) -> SCNGeometry {
-        let normal = SIMD3<Float>(0, facingUp ? 1 : -1, 0)
-        let rim = loop(latitude: 0, y: y).map { Vertex(position: SIMD3($0.position.x * 0.985, y, $0.position.z * 0.985), normal: normal) }
-        var vertices = [Vertex(position: SIMD3(0, y, 0), normal: normal)] + rim
-        vertices.reserveCapacity(rim.count + 1)
-        var indices: [UInt32] = []
-        for i in 0..<rim.count {
-            let a = UInt32(1 + i), b = UInt32(1 + (i + 1) % rim.count)
-            indices += facingUp ? [0, b, a] : [0, a, b]
-        }
-        return make(vertices: vertices, indices: indices, material: material)
     }
 }
