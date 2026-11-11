@@ -525,3 +525,17 @@ A tap is drawn as a fine ring of keyline blue travelling over the plastic from w
 
 One camera, no cuts. Each of the five shots ends on the move that begins the next: a pull of focus, an orbit, a push, a pull back. The lens is real: a frame is the average of 96 renders or more with the camera moved across its aperture and the clock across a half-open shutter, so what is off the plane of focus blurs into discs and what moves fast smears. Focus is on the thing the shot is about: the case, or the screen. The one exception is the third shot's landing, where the subject is a tap and the click it makes: there the lens is stopped down and focused between the two, so both hold for the second it takes.
 
+### Type
+
+The app's display face (SF Rounded, bold) for headlines at 88 px with tight tracking, and its text face (regular, 35 px, 82% white) for the one line under a headline. One block, at the bottom-left margin (128 px), except in the fourth shot where the app fills the left of the frame and the block is set against the right margin instead. A line rises about 30 px into place over 0.7 s and leaves by fading over 0.4 s; the first line alone is already in place on the first frame. The second line of the opening ("is a pointer.") and the address are keyline blue; everything else is white.
+
+The end card is the name at 132 px, one sentence, and the address, to the right of the closed case.
+
+### On the screen
+
+The Mac shows a plain desktop (one deep blue, two flat shapes) with the AirPointer window open: the app's Dark Mode, at its real size and layout, drawn in `web/src/screen.js` from the app's views. The dot screen, the response curve and the click ring are computed from the same formulas as the app's. The one liberty taken is the cursor, drawn at two and a half times its size so that it reads in a film. What happens on it is what the app does: the lit dot follows the cursor and trails; each tap rings on the dot screen and behind the small case; a click on Feel slides the stage left and brings the panel in on the app's own settle curve; a click on the Speed track sends the knob there, changes the readout (1.0× to 2.0×) and lifts the curve.
+
+### Sound
+
+A slow pad on four chords (D minor rising to rest on F), a quiet pulse of eighth notes once the pointer is in use, and one synthesised effect for each thing that happens in the picture: the lid, the light, the screen waking, air for each camera move, a knock for each tap, a small bright click when a pair of taps becomes a click, a chime of four notes under the name. No voice. Mixed to -16 LUFS.
+
