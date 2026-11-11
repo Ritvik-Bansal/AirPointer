@@ -502,7 +502,7 @@ This section is recorded from the source and from frames of the rendered spot. T
 Not confirmed, or not what it may seem:
 - **The address on the end card** (`github.com/Ritvik-Bansal/AirPointer`) is not confirmed until the repository exists. It is one flag: `render.sh --address`.
 - **The sound has not been heard by its maker.** It was built and checked by measurement (levels, spectrogram, cue times), not by ear.
-- **The window on the Mac is a redraw of the app**, from the app's source, not a capture of it, and the case inside that window is the spot's new model, which the app itself does not yet use.
+- **The window on the Mac is a redraw of the app**, from the app's source, not a capture of it. The case inside that window is the spot's model drawn live by Three.js; the app draws the same model with SceneKit, meshed more coarsely.
 - **The pointer is simplified**: the cursor is drawn exactly where the case is aimed. The app works from how fast the case turns.
 
 ### The studio
@@ -515,7 +515,7 @@ Every change of tone in the frame is one of three things: light falling on a sur
 
 ### The case
 
-The case and AirPods are a new model, built for this surface: `web/src/model/airpods.js`, in millimetres, from Apple's published sizes and from photographs of a real AirPods Pro 3 case. It carries what the app's simpler case leaves out: the hinge plate and the print under it, the lanyard plate, the port and its holes, the thumb scoop, the hidden status light, the sculpted lid, and AirPods that sit as they really do, tips turned in. The plastic is white with a clear gloss coat; the ear tips are matte; the metal is satin.
+The case and AirPods are a model built for this surface, and since taken into the app (The case, above): `web/src/model/airpods.js`, in millimetres, from Apple's published sizes and from photographs of a real AirPods Pro 3 case. It carries the hinge plate and the print under it, the lanyard plate, the port and its holes, the thumb scoop, the hidden status light, the sculpted lid, and AirPods that sit as they really do, tips turned in. The plastic is white with a clear gloss coat; the ear tips are matte; the metal is satin. The print and the gloss coat are this surface's shaders, and the app's copy does not have them.
 
 The status light is green, as on the real case, and goes out a few seconds after the lid opens, as the real one does. (The app's own case has a keyline-blue light; the spot does not follow it.)
 
