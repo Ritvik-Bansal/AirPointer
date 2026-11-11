@@ -56,3 +56,55 @@ function serve() {
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)))
 }
 
+function chromePath() {
+  const candidates = [
+    process.env.SPOT_CHROME,
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  ].filter(Boolean)
+  const found = candidates.find(existsSync)
+  if (!found) { console.error('spot: no Chrome found. Install Google Chrome, or set SPOT_CHROME to a Chromium binary.'); process.exit(1) }
+  return found
+}
+
+function flag(args, name, fallback) {
+  const i = args.indexOf(name)
+  if (i < 0) return fallback
+  const value = args[i + 1]
+  args.splice(i, 2)
+  return value
+}
+
+async function open(scale, extra = '') {
+  const server = await serve()
+  const browser = await puppeteer.launch({
+    executablePath: chromePath(),
+    headless: true,
+    args: ['--headless=new', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--hide-scrollbars',
+      '--force-device-scale-factor=1', '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+      '--autoplay-policy=no-user-gesture-required', `--window-size=${Math.round(1920 * scale)},${Math.round(1080 * scale)}`],
+    defaultViewport: { width: Math.round(1920 * scale), height: Math.round(1080 * scale), deviceScaleFactor: 1 },
+    protocolTimeout: 600000,
+  })
+  const page = await browser.newPage()
+  page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !/404/.test(m.text())) console.error(`[page ${m.type()}] ${m.text()}`) })
+  page.on('pageerror', e => console.error(`[page error] ${e.message}`))
+  // Loading can fail for reasons that have nothing to do with the film (Chrome drops
+  // requests in flight when the Mac changes network, even ones to this machine), so it is
+  // tried again before giving up.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await page.goto(`http://127.0.0.1:${server.address().port}/index.html?scale=${scale}${extra}`, { waitUntil: 'load' })
+      await page.evaluate(() => window.SPOT.ready)
+      break
+    } catch (error) {
+      if (attempt >= 4) { await browser.close(); server.close(); throw error }
+      console.error(`Loading the page failed (${String(error.message).split('\n')[0]}); trying again.`)
+      await new Promise(resolve => setTimeout(resolve, 1500 * attempt))
+    }
+  }
+  const close = async () => { await browser.close(); server.close() }
+  return { page, close }
+}
+
