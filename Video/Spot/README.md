@@ -33,3 +33,21 @@ Five shots, one camera, no cuts. Each shot ends on the move that begins the next
 
 The storyboard is `web/src/timeline.js`: every time above, the camera's path, the cursor's path and the words are there as plain numbers, and everything else is drawn from them.
 
+## How it is made
+
+- **The model** (`web/src/model`). The case and the AirPods are written as solids (distance fields) in millimetres and meshed by `tools/bake.mjs`. The overall sizes are Apple's published ones: the case 62.2 x 47.2 x 21.8 mm, an AirPod 30.9 x 19.2 x 27.0 mm. The rest was measured off photographs of a real AirPods Pro 3 case and scaled by those: the lid line, the rounder bottom corners, the hinge plate and the print under it, the lanyard plate, the port and the holes either side of it, the thumb scoop, the hidden light, the shape of the wells and how the AirPods sit in them. Measured off photographs means close, not exact.
+- **The picture** (`web/src/renderer.js`). Each frame is the average of 96 renders, and up to twice that where the camera is moving fast. Between them the camera is moved across the opening of its lens, the clock across the time the shutter is open, and the key light across its own width. That is what gives real depth of field, motion blur and soft shadows, rather than a blur laid on afterward.
+- **The screen** (`web/src/screen.js`). The AirPointer window is redrawn from the app's own source so that it can be driven frame by frame: the same sizes, colours, type and wording as the SwiftUI views, the dot screen from the same formula as `DotScreen.swift`, the response curve from the same maths as PointerKit's `RateShaper`, the click ring from `ClickHUD.swift`. The small case in the window is the same 3D model, drawn live. The desktop around the window is generic.
+- **The sound** (`web/src/sound.js`). A pad, a quiet pulse, and one effect per event in the picture, each placed on the cue the picture is drawn from. Nothing is recorded or sampled.
+
+## What is staged
+
+It is a commercial, not a recording, and a few things are simplified:
+
+- The case hangs in the air. No hand is shown.
+- A tap is drawn as a ring of light crossing the plastic, with a small knock of the case. A real case shows nothing when it is tapped; the ring is the film's way of making a tap visible, the same way the app's own window marks one. The taps land on the back, where the app asks for them; the camera is in front, so what is seen is the ring coming round.
+- The cursor is drawn exactly where the case is aimed. The app itself works from how fast the case is turning (like a mouse), with a response curve, so in real use the two are related but not locked.
+- The cursor on the Mac is drawn two and a half times its normal size, so that it can be seen at the size a film is watched.
+- The window on the Mac is a redraw of the app, as above, not a capture of it. The case shown inside that window is the new model; the installed app still draws its earlier, simpler one.
+- There is no voice. The only voices installed on this Mac are the compact system ones, which sound synthetic, and the words are on screen.
+
